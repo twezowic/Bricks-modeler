@@ -1,0 +1,92 @@
+
+W ramach tematu należy zbudować aplikację webową/mobilną, która będzie umożliwiać budowanie z klocków LEGO.
+Aplikacja powinna umożliwiać dodawanie nowych modeli, śledzenie postępu układania oraz korzystać z ogólnodostępnej
+bazy klocków. Każda instrukcja powinna być przetwarzana w celu automatycznego doboru klocków jeżeli są dostępne
+w bazie danych.
+Jak każda aplikacja ze śledzeniem postępu powinno być możliwe logowanie oraz kontynuowanie
+pracy nad wybranym modelem.
+Wyświetlanie powinno być zrealizowane z wykorzystaniem OpenGL.
+
+Wykorzystywane techonlogie:
+    - React.js
+    - wykorzystanie biblioteki ...
+    - API w pythonie do komunikacji z bazą danych
+    - Python + Blender do wstępnego przetworzenia plików graficznych
+    - Baza danych MySql
+
+Wymagania:
+Funkcjonalne:
+    - rejestracja/logowania do aplikacji
+    - zapis postępu w modelowaniu
+    - możliwość posiadania kilku(?) zaczętych modeli
+    - udostępnianie swoich modeli wraz z instrukcją (?)
+    - wyświetlanie instrukcji na stronie
+    - system posiada 2 tryby:Z
+        - odtwarzanie modeli: w eksploratorze znajdują się tylko elementy niezbędne
+        - tworzenie własnych: w eksploratorze znajdują się wszystkie elementy z możliwością filtrowania
+    - możliwość nakładania materiału (koloru) na elementy
+    - możliwość budowania w formie edytora:
+        - przez przeciąganie elementów z eksploratora do edytora
+        - translacje w edytorze w 2 wymiarach, 3 wymiar pionowy będzie wyrównywany elementów do najwyższego punktu od płaszczyzny (tzn. nie mogą unosić się elementy w powietrzu tylko muszą być albo na samym dole lub przyczepione do inngeo)
+        - rotacja elementów w dwóch wymiarach (lewo/prawo i góra/dół)
+        - udostępnienie skrótów klawiszowych do transalcji, rotacji, czy usuwanie elementów
+    - dostęp do elementów z ogólnodostępnej bazy klocków
+    - możliwość oceniania modeli innych użytkowników
+
+Niefunkcjonalne:
+    - zaprojektowanie strony w figmie
+    - nie musi być przystosowana do urządzeń mobilnych
+    - umożliwienie edycji dużych modeli do x elementów
+
+
+Database design:
+- User{
+    user_id
+    login
+    password
+    mail
+}
+
+- Model{
+    model_id
+    inventory_id
+    author_id(user)
+    rating (0-5)
+}
+
+- User_Inventory{
+    user_id
+    inventory_id
+    Track_id
+}
+
+- Track{
+    Track_id
+
+}
+
+
+śledzenie postępu:
+
+- wykorzystanie formatu jdif/dat udostępniany przez bazę
+- przechowywania pozycji jednego z wierzchołków w przestrzeni xyz i rotacja, nie wiem czy mam dostępne w bazie wielkości elementów
+- wskaźniki pomiędzy elementami połączonymi input/output
+
+
+dokumentowe bazy danych
+
+
+cieniowanie, poruszanie, bazy danych
+gizmo
+klocki w bazie danych zastanowić się kiedy wczytywać
+
+
+pliki gltf muszą się nazywać tak jak część
+odpalić skrypt
+
+2 bazy danych
+jedna gotowa
+druga do przechowywania plików elementów wraz z linkiem do obrazu
+
+
+GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
