@@ -1,19 +1,47 @@
 import './App.css';
-import React from 'react';
 import Part from './Part';
-import { useState } from 'react';
+import React, { useState } from 'react';
 
-export default function Explorer(){
-    const [color, setColor] = useState("#ff0000");
+export default function Explorer({ setModel, setColorModel }) {
+  const [color, setColor] = useState("#ff0000");
+  const [selectedModel, setSelectedModel] = useState(0);
 
-    return (
+  const handleColorChange = (e) => {
+    const newColor = e.target.value;
+    setColorModel(newColor);
+    setColor(newColor);
+  };
+
+  const handleSelectModel = (modelName, listNum) => {
+    console.log('Selected model:', modelName);
+    setModel(modelName);
+    setSelectedModel(listNum);
+  };
+
+  const parts = [
+    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/292602.jpg', name: 2926 },
+    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/329923.jpg', name: 3299 },
+    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/346002.jpg', name: 3460 }
+  ];
+
+  const partElements = parts.map((part, index) => (
+    <li key={part.name}>
+      <Part
+        imageUrl={part.imageUrl}
+        name={part.name}
+        onClick={() => handleSelectModel(part.name, index)}
+        isSelected={selectedModel === index}
+      />
+    </li>
+  ));
+
+  return (
     <div className='panel'>
-        <ul className='image-list'>
-          <li><Part imageUrl={'https://cdn.rebrickable.com/media/parts/elements/292602.jpg'} name={2926}/></li>
-          <li><Part imageUrl={'https://cdn.rebrickable.com/media/parts/elements/329923.jpg'} name={3299}/></li>
-          <li><Part imageUrl={'https://cdn.rebrickable.com/media/parts/elements/346002.jpg'} name={3460}/></li>
-          <input type="color" value={color} onChange={(e) => setColor(e.target.value)}></input>
-        </ul>
+      <ul className='image-list'>
+        {partElements}
+      </ul>
+      <input type="color" value={color} onChange={handleColorChange} />
+      <input></input>
     </div>
-    )
+  );
 }

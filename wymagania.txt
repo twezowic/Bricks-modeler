@@ -12,7 +12,7 @@ Wykorzystywane techonlogie:
     - wykorzystanie biblioteki ...
     - API w pythonie do komunikacji z bazą danych
     - Python + Blender do wstępnego przetworzenia plików graficznych
-    - Baza danych MySql
+    - Baza danych MySql i MongoDB
 
 Wymagania:
 Funkcjonalne:
@@ -90,3 +90,37 @@ druga do przechowywania plików elementów wraz z linkiem do obrazu
 
 
 GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
+
+
+
+- góra dół poprawnie przesuwanie
+- czy da się wyrównywać żeby zaczynały się na płaszczyźnie
+- ograniczyć kamerę żeby nie mogła iść pod spód
+napotkane problemy:
+- obrót jest w okół środka domyślny powinien być wokół wierzchowłka. Problemem jest że w okół środka jest obrót
+- nie wszystkie modele mają te same położenie.
+mam dostępne w pliku gltf współrzędne modelowaniu może na podstawie tego będę mógł wyrównwywać
+
+
+"accessors": [
+    {
+      "name": "2926-Mesh_0_positions",
+      "componentType": 5126,
+      "count": 667,
+      "min": [
+        -54,
+        -10,
+        -9.99217414855957
+      ],
+      "max": [
+        54,
+        10,
+        4
+      ],
+      "type": "VEC3",
+      "bufferView": 0,
+      "byteOffset": 0
+    },...
+]
+
+dodać do listy obrót oprócz samej pozycji

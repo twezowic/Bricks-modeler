@@ -55,6 +55,8 @@
   display: flex;
   padding: 0;
   list-style: none;
+  margin-top: 5px;
+  margin-bottom: 5px;
 }
 
 .image-list li {
@@ -64,4 +66,8 @@
 .image-list li img {
   max-width: 100px;
   height: 90px;
+}
+
+.selected {
+  border: 4px solid black; /* Żółta obwódka */
 }
