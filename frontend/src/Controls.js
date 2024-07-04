@@ -6,7 +6,7 @@ import { OrbitControls } from '@react-three/drei';
 
 const modes = ['translate', 'rotate'];
 const step = 10;
-const vertical = 2.5;
+const vertical = 8;
 const rotationStep = Math.PI / 2;
 
 export default function Controls({ state }) {
