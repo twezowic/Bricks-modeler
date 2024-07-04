@@ -125,10 +125,15 @@ elastic search
 Problemy:
 przy wczytaniu ma się dopasować do odpowieniego step
 
+TODO w pythonie:
+
+
 20 to przesunięcie poziome
 8 to przesunięcie pionowe
 
 aby obliczać położenie klocków:
 z bazy danych bierzemy wymiary (dla pozostałych coś innego wymyślić)
 dzielimy je na 2 i w ten sposób możemy obliczyć położenie każdej wypustki
-potem sprawdzić czy pod nią jest jakiś element
+potem sprawdzić czy pod nią jest jakiś element co będzie funkcją rekurencyjną na razie niech to koloruje elementy na inny kolor lub przezroczystość dodać
+
+dodać do tego co znaczy dla tego obrót o 90 stopni
