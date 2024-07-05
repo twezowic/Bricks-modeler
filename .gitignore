@@ -1,0 +1,6 @@
+*.gltf
+*/gltf
+*__pycache__
+*parts
+*csv2sql.py
+*filter_data.py

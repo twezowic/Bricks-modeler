@@ -31,9 +31,11 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     }
   });
 
-  function metadataEqual(pos1, pos2) {
-    return pos1[0] === pos2[0] && pos1[1] === pos2[1] && pos1[2] === pos2[2];
+  function metadataEqual(meta1, meta2) {
+    return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
   }
+
+  const pivotPoint = new THREE.Vector3(0, 0, 0);
 
   return (
     <mesh
@@ -51,6 +53,10 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       material-specular={'#7c71a2'}
       dispose={null}
       {...props}
-    />
+      >
+      <group position={pivotPoint}>
+        {props.children}
+      </group>
+    </mesh>
   );
 }
