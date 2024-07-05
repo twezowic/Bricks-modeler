@@ -21,7 +21,7 @@ Funkcjonalne:
     - możliwość posiadania kilku(?) zaczętych modeli
     - udostępnianie swoich modeli wraz z instrukcją (?)
     - wyświetlanie instrukcji na stronie
-    - system posiada 2 tryby:
+    - system posiada 2 tryby:Z
         - odtwarzanie modeli: w eksploratorze znajdują się tylko elementy niezbędne
         - tworzenie własnych: w eksploratorze znajdują się wszystkie elementy z możliwością filtrowania
     - możliwość nakładania materiału (koloru) na elementy
@@ -68,7 +68,6 @@ GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
 - góra dół poprawnie przesuwanie
 - czy da się wyrównywać żeby zaczynały się na płaszczyźnie
 - ograniczyć kamerę żeby nie mogła iść pod spód
-
 napotkane problemy:
 - obrót jest w okół środka domyślny powinien być wokół wierzchowłka. Problemem jest że w okół środka jest obrót
 - nie wszystkie modele mają te same położenie.
@@ -76,6 +75,14 @@ mam dostępne w pliku gltf współrzędne modelowaniu może na podstawie tego b�
 
 
 zmienić id ustawiane bo przy usunięciu może się nadpisać
+
+Zrobione:
+-zapisywanie do pliku
+- dodawanie obrotu do zapisu
+
+Baza danych:
+
+- zapisywanie postępu na podstawie pliku json:
 
 
 Tabele:
@@ -86,7 +93,7 @@ Użytkownik:
 - login
 - password
 
-Model:      - chodzi o sam plik gltf
+Model:
 - id
 - nazwa
 - plik gltf
@@ -112,22 +119,21 @@ wczytawanie określonej maksymalnej liczby elementów do wyboru z listy:
 wczytanie modelu w momencie pierwszego dodawania do sceny w przypadku tworzenia modelu:
 gdy odtwarzany model to wczytuje wszystkie elementy (może z ekranem loadingu), które mają zostać użyte.
 
-ekran loadingu dodać na samym elemencie może
-
 Zdockeryzować
 elastic search
-mongo zrobić lokalnie bo chmurowe jest za małe
+
+Problemy:
+przy wczytaniu ma się dopasować do odpowieniego step
+
+TODO w pythonie:
 
 
-Napotkange bugi:
-z czasem program działa coraz wolniej, wyciek pamięci?
+20 to przesunięcie poziome
+8 to przesunięcie pionowe
 
+aby obliczać położenie klocków:
+z bazy danych bierzemy wymiary (dla pozostałych coś innego wymyślić)
+dzielimy je na 2 i w ten sposób możemy obliczyć położenie każdej wypustki
+potem sprawdzić czy pod nią jest jakiś element co będzie funkcją rekurencyjną na razie niech to koloruje elementy na inny kolor lub przezroczystość dodać
 
-
-
-
-
-
-NAJWAZNIEJSZE: 
-- poruszanie wiele elementów
-- łączenie elementów co skutkuje poruszaniem wielu gdy wybierzemy jeden z elementów które są bezpośrendnio pod nim
+dodać do tego co znaczy dla tego obrót o 90 stopni
