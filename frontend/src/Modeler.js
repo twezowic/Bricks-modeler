@@ -54,7 +54,7 @@ export default function Modeler({ color, model }) {
   }
 
   const getBeginPosition = async (model) => {
-    const response = await fetch('/' + model + '.gltf');
+    const response = await fetch(`${ip}/model/${model}`);
     const data = await response.json();
     return data['accessors'][0]['min'];
   };
@@ -151,7 +151,7 @@ export default function Modeler({ color, model }) {
               <Model
                 key={index}
                 name={model.name}
-                gltfPath={model.gltfPath}
+                gltfPath={`${ip}/model/${model.gltfPath}`}
                 position={model.position}
                 rotation={model.rotation}
                 state={state}

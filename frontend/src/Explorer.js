@@ -1,6 +1,7 @@
 import './App.css';
 import Part from './Part';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ip } from "./utils"
 
 export default function Explorer({ setModel, setColorModel }) {
   const [color, setColor] = useState("#ff0000");
@@ -18,12 +19,31 @@ export default function Explorer({ setModel, setColorModel }) {
     setSelectedModel(listNum);
   };
 
-  const parts = [
-    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/292602.jpg', name: 2926 },
-    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/329923.jpg', name: 3299 },
-    { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/346002.jpg', name: 3460 }
-  ];
+  const [parts, setParts] = useState([]);
 
+  useEffect(() => {
+    const fetchParts = async () => {
+      try {
+        const response = await fetch(`${ip}/thumbnails`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setParts(data);
+      } catch (error) {
+        console.error('Error fetching parts:', error);
+      }
+    };
+    fetchParts();
+  }, []);
+
+  // const parts = [
+  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/292602.jpg', name: 2926 },
+  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/329923.jpg', name: 3299 },
+  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/346002.jpg', name: 3460 }
+  // ];
+
+  
   const partElements = parts.map((part, index) => (
     <li key={part.name}>
       <Part
