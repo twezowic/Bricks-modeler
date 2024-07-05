@@ -20,15 +20,13 @@ def add_models(folder_path):
         models.insert_one(document)
 
 
-def get_model(model_name, output_folder):
+def get_model(model_name):
     document = models.find_one({'model': model_name})
     
     if document:
         file_content = document['file']
-        output_path = os.path.join(output_folder, model_name) + '.gltf'
         
-        with open(output_path, 'w') as file:
-            file.write(file_content)
+        return file_content
     else:
         print(f"Model {model_name} not found.")
 

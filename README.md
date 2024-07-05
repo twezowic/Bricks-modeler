@@ -119,9 +119,15 @@ wczytawanie określonej maksymalnej liczby elementów do wyboru z listy:
 wczytanie modelu w momencie pierwszego dodawania do sceny w przypadku tworzenia modelu:
 gdy odtwarzany model to wczytuje wszystkie elementy (może z ekranem loadingu), które mają zostać użyte.
 
+ekran loadingu dodać na samym elemencie może
+
 Zdockeryzować
 elastic search
+mongo zrobić lokalnie bo chmurowe jest za małe
 
+
+Napotkange bugi:
+z czasem program działa coraz wolniej, wyciek pamięci?
 Problemy:
 przy wczytaniu ma się dopasować do odpowieniego step
 
@@ -137,3 +143,4 @@ dzielimy je na 2 i w ten sposób możemy obliczyć położenie każdej wypustki
 potem sprawdzić czy pod nią jest jakiś element co będzie funkcją rekurencyjną na razie niech to koloruje elementy na inny kolor lub przezroczystość dodać
 
 dodać do tego co znaczy dla tego obrót o 90 stopni
+
