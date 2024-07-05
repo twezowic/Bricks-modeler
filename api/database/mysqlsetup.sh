@@ -8,3 +8,4 @@ sudo mysql -u root LEGO < sql/colors.sql
 sudo mysql -u root LEGO < sql/sets.sql
 sudo mysql -u root LEGO < sql/parts.sql
 sudo mysql -u root LEGO < sql/inventory_parts.sql
+sudo mysql -u root LEGO < sql/thumbnail.sql

@@ -25,7 +25,6 @@ def get_model(model_name):
     
     if document:
         file_content = document['file']
-        
         return file_content
     else:
         print(f"Model {model_name} not found.")

@@ -144,3 +144,6 @@ potem sprawdzić czy pod nią jest jakiś element co będzie funkcją rekurencyj
 
 dodać do tego co znaczy dla tego obrót o 90 stopni
 
+
+
+w mysqldb zostały utworzony plik csv z klockami które nie mają preview. Należy coś z nimi zrobić i pamiętać że zestawy pewnie z nich korzystają. Plik: without_thumbnail

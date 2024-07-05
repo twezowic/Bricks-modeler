@@ -20,7 +20,7 @@ CREATE TABLE PARTS (
 );
 
 CREATE TABLE INVENTORY_PARTS (
-    inventory_id INT,
+    inventory_id INT NULL,
     part_num VARCHAR(100),
     color_id INT,
     quantity INT,
