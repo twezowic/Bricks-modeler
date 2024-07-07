@@ -64,7 +64,7 @@ export default function Modeler({ color, model }) {
     const start_translation = await getBeginPosition(model);
     const newModel = {
       name: `model-${counter}`,
-      gltfPath: `${ip}/model/${model}`,
+      gltfPath: model,
       position: setBeginPosition([0, 0, 0], start_translation),
       rotation: [0, 0, 0],
       color: color

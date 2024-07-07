@@ -147,3 +147,5 @@ dodać do tego co znaczy dla tego obrót o 90 stopni
 
 
 w mysqldb zostały utworzony plik csv z klockami które nie mają preview. Należy coś z nimi zrobić i pamiętać że zestawy pewnie z nich korzystają. Plik: without_thumbnail
+
+ustawianie begin_position i modelu dwukrtonie odwołuje się do api

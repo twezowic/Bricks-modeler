@@ -3,19 +3,20 @@ import { useSnapshot } from 'valtio';
 import { useGLTF, useCursor } from '@react-three/drei';
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber';
+import { ip } from './utils';
 
 const modes = ['translate', 'rotate'];
 
 export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, ...props }) {
   const snap = useSnapshot(state);
   const [hovered, setHovered] = useState(false);
-  const { nodes } = useGLTF(gltfPath);
+  const { nodes } = useGLTF(`${ip}/model/${gltfPath}`);
   const ref = useRef();
   const prevPosition = useRef([0, 0, 0]);
   const prevRotation = useRef([0, 0, 0]);
 
   useCursor(hovered);
-  useGLTF.preload(gltfPath);
+  useGLTF.preload(`${ip}/model/${gltfPath}`);
 
   useFrame(() => {
     if (ref.current) {
@@ -35,13 +36,6 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
   }
 
-  const pivotPoint = new THREE.Vector3(0, 0, 0);
-
-  function getName(str) {
-    const segments = str.split('/');
-    return segments[segments.length - 1];
-  }
-
   return (
     <mesh
       ref={ref}
@@ -51,7 +45,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
       onPointerOut={(e) => setHovered(false)}
       name={name}
-      geometry={nodes[getName(gltfPath)].geometry}
+      geometry={nodes[gltfPath].geometry}
       material={new THREE.MeshPhongMaterial()}
       // color, emissive, specular = ambient, difuse, specular
       material-color={color}
@@ -59,9 +53,6 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       dispose={null}
       {...props}
       >
-      <group position={pivotPoint}>
-        {props.children}
-      </group>
     </mesh>
   );
 }
