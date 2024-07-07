@@ -17,6 +17,7 @@ export default function Modeler({ color, model }) {
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const glRef = useRef(null);
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
     prevModelsRef.current = models;
@@ -62,12 +63,13 @@ export default function Modeler({ color, model }) {
   const addNewModel = async (color, model) => {
     const start_translation = await getBeginPosition(model);
     const newModel = {
-      name: `model-${models.length + 1}`,
-      gltfPath: model,
+      name: `model-${counter}`,
+      gltfPath: `${ip}/model/${model}`,
       position: setBeginPosition([0, 0, 0], start_translation),
       rotation: [0, 0, 0],
       color: color
     };
+    setCounter(counter + 1);
     setModels((prevModels) => [...prevModels, newModel]);
   };
 
@@ -151,7 +153,7 @@ export default function Modeler({ color, model }) {
               <Model
                 key={index}
                 name={model.name}
-                gltfPath={`${ip}/model/${model.gltfPath}`}
+                gltfPath={model.gltfPath}
                 position={model.position}
                 rotation={model.rotation}
                 state={state}

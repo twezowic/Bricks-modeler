@@ -37,6 +37,11 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
 
   const pivotPoint = new THREE.Vector3(0, 0, 0);
 
+  function getName(str) {
+    const segments = str.split('/');
+    return segments[segments.length - 1];
+  }
+
   return (
     <mesh
       ref={ref}
@@ -46,7 +51,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
       onPointerOut={(e) => setHovered(false)}
       name={name}
-      geometry={nodes[gltfPath].geometry}
+      geometry={nodes[getName(gltfPath)].geometry}
       material={new THREE.MeshPhongMaterial()}
       // color, emissive, specular = ambient, difuse, specular
       material-color={color}
