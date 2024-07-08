@@ -1,18 +1,18 @@
 import './App.css';
-import Modeler from './Modeler';
-import Explorer from './Explorer';
-import React, { useState } from 'react';
+
+import React from 'react';
+import { Route, Routes } from 'react-router-dom';
+import AppRoutes from './AppRoutes';
 
 
 function App() {
-  const [selectedColor, setSelectedColor] = useState("#ff0000");
-  const [selectedModel, setSelectedModel] = useState("2926")
-
   return (
-    <>
-      <Modeler color={selectedColor} model={selectedModel}/>
-      <Explorer setColorModel={setSelectedColor} setModel={setSelectedModel}/>
-    </>
+    <Routes>
+      {AppRoutes.map((route, index) => {
+        const { element, ...rest } = route;
+        return <Route key={index} {...rest} element={element} />;
+      })}
+    </Routes>
   )
 }
 

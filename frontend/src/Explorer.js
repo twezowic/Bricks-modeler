@@ -37,13 +37,6 @@ export default function Explorer({ setModel, setColorModel }) {
     fetchParts();
   }, []);
 
-  // const parts = [
-  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/292602.jpg', name: 2926 },
-  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/329923.jpg', name: 3299 },
-  //   { imageUrl: 'https://cdn.rebrickable.com/media/parts/elements/346002.jpg', name: 3460 }
-  // ];
-
-  
   const partElements = parts.map((part, index) => (
     <li key={part.name}>
       <Part
