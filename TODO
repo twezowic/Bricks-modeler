@@ -1,0 +1,35 @@
+Do sprawdzenia:
+
+- GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
+- elastic search
+- Do logowania użytkowników gotowy komponent: auth0 lub keycloak, userfront https://userfront.com/docs/toolkit/install/login-form-react
+
+
+Do zrobienia większe:
+
+- Zdockeryzować
+- ujednolicić miniaturki można napisać skrypt w blenderze który wczyta pliki bez materiałów i zrobi ich zrzut ekranu
+
+
+Do zrobienia mniejsze:
+
+- czy da się wyrównywać żeby zaczynały się na płaszczyźnie
+- ograniczyć kamerę żeby nie mogła iść pod spód
+- w mysqldb zostały utworzony plik csv z klockami które nie mają preview. Należy coś z nimi zrobić i pamiętać że zestawy pewnie z nich korzystają. Plik: without_thumbnail
+- ustawianie begin_position i modelu dwukrtonie odwołuje się do api
+- sprawdzić jak id jest zapisywane w mongo.db
+- rozdzielić thumnail i plik z postępem do bazy danych
+- stawiać element w odległości min element - stała
+- napisać funkcję rekurencyjną która przyjmuje model_name i sprawdza w góre które elementy są połączone
+
+
+Napotkange bugi:
+
+- z czasem program działa coraz wolniej, wyciek pamięci?
+- Elements lazy loading, we should stream elements when they are needed
+wczytawanie określonej maksymalnej liczby elementów do wyboru z listy:
+wczytanie modelu w momencie pierwszego dodawania do sceny w przypadku tworzenia modelu:
+gdy odtwarzany model to wczytuje wszystkie elementy (może z ekranem loadingu), które mają zostać użyte.
+- nie do końca działa ta kolizja, np. element ze spadkiem
+- problem z kolizją po obrotach w okół osi x i y
+- znaleziony 'blad' gdy ten sam id ma element to wszystkie porusza -> może wykorzystać do poruszania paru na raz?

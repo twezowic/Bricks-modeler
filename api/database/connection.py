@@ -96,7 +96,7 @@ class Model:
     def from_json(scene):
         models = []
         for model in scene:
-            model_name = str(model['gltfPath'])   # to powinien zawsze być string trzeba poprawić w frontendzie
+            model_name = model['gltfPath']
             minimum, maximum = get_metadata(model_name)
             height = (maximum[2] - minimum[2]) // HEIGHT
             models.append(Model(model['name'], model['position'], minimum, maximum, model['rotation'], check_size(model_name), height))
