@@ -21,9 +21,24 @@ export default function Controls({ state }) {
       const onChange = () => {
         const object = controls.object;
         if (controls.mode === 'translate') {
-          object.position.x = Math.round(object.position.x / step) * step;
-          object.position.y = Math.round(object.position.y / step) * step;
-          object.position.z = Math.round(object.position.z / vertical) * vertical;
+          if (object.rotation.x === Math.PI / 2|| object.rotation.x === - Math.PI / 2)
+          {
+            object.position.x = Math.round(object.position.x / step) * step;
+            object.position.y = Math.round(object.position.y / vertical) * vertical;
+            object.position.z = Math.round(object.position.z / step) * step;
+          }
+          else if (object.rotation.y === Math.PI / 2|| object.rotation.y === - Math.PI / 2)
+          {
+            object.position.x = Math.round(object.position.x / vertical) * vertical;
+            object.position.y = Math.round(object.position.y / step) * step;
+            object.position.z = Math.round(object.position.z / step) * step;
+          }
+          else
+          {
+            object.position.x = Math.round(object.position.x / step) * step;
+            object.position.y = Math.round(object.position.y / step) * step;
+            object.position.z = Math.round(object.position.z / vertical) * vertical;
+          }
         }
         else if (controls.mode === 'rotate') {
           object.rotation.x = Math.round(object.rotation.x / rotationStep) * rotationStep;
