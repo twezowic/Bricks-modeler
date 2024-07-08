@@ -3,7 +3,7 @@
 import mysql.connector
 
 host = 'localhost'
-database = 'LEGO' 
+database = 'LEGO'
 user = 'root'
 
 def get_inventory_parts(inventory_id):
@@ -28,7 +28,7 @@ def get_inventory_parts(inventory_id):
             else:
                 print(f"inventory: {inventory_id} not found")
 
-            
+
     except mysql.connector.Error as err:
         print(f"Connection error: {err}")
 
@@ -46,7 +46,7 @@ def get_part_description(part_num):
 
         if connection.is_connected():
             cursor = connection.cursor()
-            
+
             query = "SELECT name FROM PARTS WHERE part_num = %s;"
             cursor.execute(query, (part_num,))
 
@@ -57,7 +57,7 @@ def get_part_description(part_num):
             else:
                 print(f"inventory: {part_num} not found")
 
-            
+
     except mysql.connector.Error as err:
         print(f"Connection error: {err}")
 
@@ -75,12 +75,12 @@ def get_parts_thumbnail():
 
         if connection.is_connected():
             cursor = connection.cursor()
-            
+
             query = """
-                SELECT p.part_num, p.name, MAX(i.img_url) AS img_url 
-                FROM PARTS p 
-                LEFT JOIN INVENTORY_PARTS i ON p.part_num = i.part_num 
-                WHERE i.img_url IS NOT NULL 
+                SELECT p.part_num, p.name, MAX(i.img_url) AS img_url
+                FROM PARTS p
+                LEFT JOIN INVENTORY_PARTS i ON p.part_num = i.part_num
+                WHERE i.img_url IS NOT NULL
                 GROUP BY p.part_num, p.name;
             """
             cursor.execute(query)
@@ -96,10 +96,42 @@ def get_parts_thumbnail():
         connection.close()
 
 
-res = []
-for a, b, c in get_parts_thumbnail():
-    if c is None:
-        print('a')
+def get_filtered_parts(filter_value):
+    try:
+        connection = mysql.connector.connect(
+            host=host,
+            database=database,
+            user=user
+        )
+
+        if connection.is_connected():
+            cursor = connection.cursor()
+
+            query = """
+                SELECT p.part_num, p.name, MAX(i.img_url) AS img_url
+                FROM PARTS p
+                LEFT JOIN INVENTORY_PARTS i ON p.part_num = i.part_num
+                WHERE i.img_url IS NOT NULL AND p.name LIKE %s
+                GROUP BY p.part_num, p.name
+                LIMIT 15;
+            """
+            cursor.execute(query, ('%' + filter_value + '%',))
+
+            result = cursor.fetchall()
+
+            return result
+
+    except mysql.connector.Error as err:
+        print(f"Connection error: {err}")
+
+    finally:
+        connection.close()
+
+
+# res = []
+# for a, b, c in get_parts_thumbnail():
+#     if c is None:
+#         print('a')
 
 # import pandas as pd
 

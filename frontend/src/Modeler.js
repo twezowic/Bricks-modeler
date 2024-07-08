@@ -27,17 +27,17 @@ export default function Modeler({ color, model }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === ' ') {
+      if (event.key === 'Tab') {
         addNewModel(color, model);
       } else if (event.key === 'Enter') {
         saveScene();
-      } else if (event.key === 'Backspace') {
+      } else if (event.key === '\\') {
         loadScene();
       } else if (event.key === 'Delete') {
         const newModels = models.filter(model => model.name !== state.current);
         setModels(newModels);
         state.current = null;
-      } else if (event.key === 'k') {
+      } else if (event.key === 'Shift') {
         getConnection();
       }
     };
@@ -96,7 +96,7 @@ export default function Modeler({ color, model }) {
     const newModel = {
       name: `model-${uuidv4()}`,
       gltfPath: model,
-      position: setBeginPosition([0, 0, 0], start_translation),
+      position: setBeginPosition(getEmptySpace(), start_translation),
       rotation: [0, 0, 0],
       color: color
     };
@@ -108,6 +108,28 @@ export default function Modeler({ color, model }) {
       model.name === name ? { ...model, position: newPosition, rotation: newRotation } : model
     );
     setModels(newModels);
+  };
+
+  const getEmptySpace = () => {
+    if (models.length === 0) {
+      return [0, 0, 0];
+    }
+
+    let minX = models[0].position[0];
+    let minY = models[0].position[1];
+
+    for (let i = 1; i < models.length; i++) {
+      const posX = models[i].position[0];
+      const posY = models[i].position[1];
+
+      if (posX < minX) {
+        minX = posX;
+      }
+      if (posY < minY) {
+        minY = posY;
+      }
+    }
+    return [minX - 100, minY - 100, 0];
   };
 
   const saveScene = async () => {

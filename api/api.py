@@ -1,7 +1,6 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-# from mongo import get_model_db, add_track_db, get_track_db
 import database.mysqldb as mysqldb
 import database.mongodb as mongodb
 from database.connection import connection_for_api
@@ -17,12 +16,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# dodać tutaj też obsługę wyszukiwarki na podstawie nazwy elementu
-@app.get('/thumbnails')
-async def get_thumbnails():
-    thumbnails = mysqldb.get_parts_thumbnail()
-    result = [{'imageUrl': t[2], 'name': t[0]} for t in thumbnails][:20]
 
+@app.get('/thumbnails')
+async def get_thumbnails(filter: str = Query(None)):
+    thumbnails = mysqldb.get_filtered_parts(filter) if filter else mysqldb.get_parts_thumbnail()
+    result = [{'imageUrl': t[2], 'name': t[0]} for t in thumbnails][:18]
     return result
 
 @app.get('/model/{id}')
@@ -31,7 +29,7 @@ async def get_model(id: str):
     if result:
         return json.loads(result)
     else:
-        return HTTPException(status_code=404, detail="Model not found.")
+        return HTTPException(status_code=404, detail="Model` not found.")
 
 
 class Scene(BaseModel):
@@ -42,7 +40,6 @@ class Scene(BaseModel):
 async def get_connections(models: Scene):
     result = connection_for_api(models)
 
-    # Konwersja tuple z int na int
     for point in result:
         point['point'] = tuple(map(int, point['point']))
 

@@ -20,11 +20,13 @@ export default function Explorer({ setModel, setColorModel }) {
   };
 
   const [parts, setParts] = useState([]);
+  const [filterValue, setFilterValue] = useState('');
+
 
   useEffect(() => {
     const fetchParts = async () => {
       try {
-        const response = await fetch(`${ip}/thumbnails`);
+        const response = await fetch(`${ip}/thumbnails?filter=${filterValue}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
@@ -35,7 +37,7 @@ export default function Explorer({ setModel, setColorModel }) {
       }
     };
     fetchParts();
-  }, []);
+  }, [filterValue]);
 
   const partElements = parts.map((part, index) => (
     <li key={part.name}>
@@ -48,13 +50,17 @@ export default function Explorer({ setModel, setColorModel }) {
     </li>
   ));
 
+  const handleFilterChange = (event) => {
+    setFilterValue(event.target.value);
+  };
+
   return (
     <div className='panel'>
       <ul className='image-list'>
         {partElements}
       </ul>
       <input type="color" value={color} onChange={handleColorChange} />
-      <input></input>
+      <input type="text" value={filterValue} onChange={handleFilterChange} placeholder="Filter parts by name" />
     </div>
   );
 }

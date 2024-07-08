@@ -134,9 +134,9 @@ def check_connection(scene):
 
 
 
-scene = [{"name":"model-0","gltfPath":"3062b","position":[10,10,48],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-1","gltfPath":"3062b","position":[10,10,72],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-2","gltfPath":"3062b","position":[10,10,96],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-3","gltfPath":"3062b","position":[10,10,24],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-4","gltfPath":"30176","position":[10,10,120],"rotation":[0,0,0],"color":"#26a269"},{"name":"model-5","gltfPath":"30176","position":[10,10,144],"rotation":[0,0,-3.141592653589793],"color":"#26a269"},{"name":"model-7","gltfPath":"3003","position":[-30,-60,24],"rotation":[0,0,0],"color":"#f6d32d"},{"name":"model-9","gltfPath":"4865a","position":[-40,-60,48],"rotation":[0,0,1.5707963267948966],"color":"#f6d32d"},{"name":"model-10","gltfPath":"3069b","position":[-20,-60,32],"rotation":[0,0,-1.5707963267948966],"color":"#f6d32d"},{"name":"model-13","gltfPath":"2343","position":[-20,-20,40],"rotation":[0,0,0],"color":"#a51d2d"}]
-points = check_connection(scene)
-pprint(points)
+# scene = [{"name":"model-0","gltfPath":"3062b","position":[10,10,48],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-1","gltfPath":"3062b","position":[10,10,72],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-2","gltfPath":"3062b","position":[10,10,96],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-3","gltfPath":"3062b","position":[10,10,24],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-4","gltfPath":"30176","position":[10,10,120],"rotation":[0,0,0],"color":"#26a269"},{"name":"model-5","gltfPath":"30176","position":[10,10,144],"rotation":[0,0,-3.141592653589793],"color":"#26a269"},{"name":"model-7","gltfPath":"3003","position":[-30,-60,24],"rotation":[0,0,0],"color":"#f6d32d"},{"name":"model-9","gltfPath":"4865a","position":[-40,-60,48],"rotation":[0,0,1.5707963267948966],"color":"#f6d32d"},{"name":"model-10","gltfPath":"3069b","position":[-20,-60,32],"rotation":[0,0,-1.5707963267948966],"color":"#f6d32d"},{"name":"model-13","gltfPath":"2343","position":[-20,-20,40],"rotation":[0,0,0],"color":"#a51d2d"}]
+# points = check_connection(scene)
+# pprint(points)
 
 
 def connection_for_api(scene) -> dict:

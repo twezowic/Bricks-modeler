@@ -2,13 +2,15 @@ Do sprawdzenia:
 
 - GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
 - elastic search
-- Do logowania użytkowników gotowy komponent: auth0 lub keycloak, userfront https://userfront.com/docs/toolkit/install/login-form-react
+
 
 
 Do zrobienia większe:
 
 - Zdockeryzować
 - ujednolicić miniaturki można napisać skrypt w blenderze który wczyta pliki bez materiałów i zrobi ich zrzut ekranu
+- wczytywać elementy w odpowiednim momencie
+- Do logowania użytkowników gotowy komponent: auth0 lub keycloak, userfront https://userfront.com/docs/toolkit/install/login-form-react
 
 
 Do zrobienia mniejsze:
@@ -19,8 +21,14 @@ Do zrobienia mniejsze:
 - ustawianie begin_position i modelu dwukrtonie odwołuje się do api
 - sprawdzić jak id jest zapisywane w mongo.db
 - rozdzielić thumnail i plik z postępem do bazy danych
-- stawiać element w odległości min element - stała
+- stawiać element w odległości min element - stała - wymyśleć coś lepszego po okręgu?
 - napisać funkcję rekurencyjną która przyjmuje model_name i sprawdza w góre które elementy są połączone
+- zrobić focus podczas pisania że skróty klawiszowe nie działają
+- zrobić przesuwanie elementów zamiast skrótu żeby dodawać elementy
+
+
+do zrobienia później:
+- przy odtwarzaniu modeli ma być numerek przy elemencie ile razy jeszcze go wykorzystać
 
 
 Napotkange bugi:
