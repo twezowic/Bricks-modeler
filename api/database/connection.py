@@ -2,60 +2,109 @@ import json
 import re
 from dataclasses import dataclass
 import numpy as np
+from pprint import pprint
+import csv
+from collections import Counter
+from math import pi
 
-from mysqldb import get_part_description
-from mongodb import get_model
+from database.mysqldb import get_part_description
+from database.mongodb import get_model
+
+# from mysqldb import get_part_description
+# from mongodb import get_model
 
 
 LENGTH = 20
-
-@dataclass
-class Insertion:
-    positions: list     # 4 pozycje wokół wypustki
-
-    @staticmethod
-    def from_corner(position):  # brac po uwage jakos kąt
-        positions = []
-        for i in range(2):
-            for j in range(2):
-                positions.append([position[0]+20*i, position[1]+20*j])
-        return Insertion(positions)
-    
-    def __eq__(self, value: object) -> bool:        # pozniej brac pod uwage pozycje poziomie tylko a pionowe w zasięgu pewnym
-        for position in self.positions:
-            if position not in value.positions:
-                return False
-        return True
+HEIGHT = 8
 
 @dataclass
 class Model:
+    name: str
     middle: list
     minimum: list
+    maximum: list
+    rotation: list
     size: list
+    height: int
 
-    def dimensions(self):
-        return len(self.size)
-    
-    def get_insertions(self):
-        result = np.zeros(tuple(self.size) + (2,), dtype=int)
-        if self.dimensions() == 2:
+
+    def get_insertions(self):       # bierze środek
+        if not self.size:       # pozniej cos z tym zrobic
+            return
+        if self.size:
+            result_bottom = np.zeros(tuple(self.size) + (3,), dtype=int)
             half_x = self.size[0] / 2
             half_y = self.size[1] / 2
 
+            bottom = self.middle[2] + self.minimum[2]
+            top = bottom + self.height * HEIGHT
+            result_bottom[:, :, 2] = bottom
+
             for i in range(self.size[1]):
                 for j in range(self.size[0]):
-                    result[j, i, 1] = int(self.middle[1] - 20 * half_x + j * 20)
-                    result[j, i, 0] = int(self.middle[0] - 20 * half_y + i * 20)
-                    
-        elif self.dimensions() == 3:
-            ...
-        else:
-            raise Exception
+                    result_bottom[j, i, 1] = int(self.middle[1] - 20 * half_x + j * 20+10)
+                    result_bottom[j, i, 0] = int(self.middle[0] - 20 * half_y + i * 20+10)
+            result_top = np.copy(result_bottom)
+            result_top[:, : , 2] = top
+            result = np.concatenate((result_bottom, result_top))
+
+            result = self.apply_rotation(result)
+
         return result
 
-def check_size(model_name):
+
+    def get_rotation_matrix(self):
+        angles = self.rotation
+        cos_x, sin_x = np.cos(angles[0]), np.sin(angles[0])
+        cos_y, sin_y = np.cos(angles[1]), np.sin(angles[1])
+        cos_z, sin_z = np.cos(angles[2]), np.sin(angles[2])
+
+        R_x = np.array([
+            [1, 0, 0],
+            [0, cos_x, -sin_x],
+            [0, sin_x, cos_x]
+        ])
+
+        R_y = np.array([
+            [cos_y, 0, sin_y],
+            [0, 1, 0],
+            [-sin_y, 0, cos_y]
+        ])
+
+        R_z = np.array([
+            [cos_z, -sin_z, 0],
+            [sin_z, cos_z, 0],
+            [0, 0, 1]
+        ])
+
+        R = np.dot(R_z, np.dot(R_y, R_x))
+        return R
+
+    def apply_rotation(self, points):
+        rotation_matrix = self.get_rotation_matrix()
+        points_rotated = points.reshape(-1, 3)
+
+        for i in range(points_rotated.shape[0]):
+            point = points_rotated[i]
+            point_rotated = np.dot(rotation_matrix, point - self.middle) + self.middle
+            points_rotated[i] = point_rotated
+
+        return points_rotated.reshape(points.shape)
+
+
+    @staticmethod
+    def from_json(scene):
+        models = []
+        for model in scene:
+            model_name = str(model['gltfPath'])   # to powinien zawsze być string trzeba poprawić w frontendzie
+            minimum, maximum = get_metadata(model_name)
+            height = (maximum[2] - minimum[2]) // HEIGHT
+            models.append(Model(model['name'], model['position'], minimum, maximum, model['rotation'], check_size(model_name), height))
+        return models
+
+def check_size(model_name): # zawsze daje max 2 rozmiary
     desc = get_part_description(model_name)
-    pattern = r"(\d{1,2}(\d+)?(?: x \d{1,2}(\d+)?){1,2})"
+    pattern = r"(\d{1,2}(\d+)?(?: x \d{1,2}(\d+)?){1})"
 
     result = re.search(pattern, desc)
     if result:
@@ -63,7 +112,7 @@ def check_size(model_name):
 
         return [int(dim) for dim in dimensions.split(' x ')]
     else:
-        print("No dimensions")
+        return None
 
 
 def get_metadata(model_name):
@@ -73,45 +122,33 @@ def get_metadata(model_name):
     return minimum, maximum
 
 
-def check_connection(file):
-    with open(file) as fh:
-        scene = json.load(fh)['models']
-    models = []
-    for model in scene:
-        model_name = str(model['gltfPath'])   # to powinien zawsze być string trzeba poprawić w frontendzie
-        models.append(Model(model['position'], get_metadata(model_name)[0], check_size(model_name)))
-        # model['rotation']
-    
+def check_connection(scene):
     points = []
-    for model in models:
-        points.append(model.get_insertions())
+    for model in Model.from_json(scene):
+        connect = model.get_insertions()
+        if connect is not None:
+            # points.append((model.name, connect))
+            for point in connect:
+                points.extend(point)
     return points
-    
-
-# check_connection("scene.json")
-points = check_connection('database/scene.json')
-
-# print(points)
 
 
-def find_same_positions(arrays):
+
+scene = [{"name":"model-0","gltfPath":"3062b","position":[10,10,48],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-1","gltfPath":"3062b","position":[10,10,72],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-2","gltfPath":"3062b","position":[10,10,96],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-3","gltfPath":"3062b","position":[10,10,24],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-4","gltfPath":"30176","position":[10,10,120],"rotation":[0,0,0],"color":"#26a269"},{"name":"model-5","gltfPath":"30176","position":[10,10,144],"rotation":[0,0,-3.141592653589793],"color":"#26a269"},{"name":"model-7","gltfPath":"3003","position":[-30,-60,24],"rotation":[0,0,0],"color":"#f6d32d"},{"name":"model-9","gltfPath":"4865a","position":[-40,-60,48],"rotation":[0,0,1.5707963267948966],"color":"#f6d32d"},{"name":"model-10","gltfPath":"3069b","position":[-20,-60,32],"rotation":[0,0,-1.5707963267948966],"color":"#f6d32d"},{"name":"model-13","gltfPath":"2343","position":[-20,-20,40],"rotation":[0,0,0],"color":"#a51d2d"}]
+points = check_connection(scene)
+pprint(points)
+
+
+def connection_for_api(scene) -> dict:
+    points = check_connection(scene.models)
+
     result = []
-
-    for idx1, arr1 in enumerate(arrays):
-        for idx2, arr2 in enumerate(arrays):
-            if idx1 >= idx2:
-                continue
-            for elem1 in arr1[0]:
-                for elem2 in arr2[0]:
-                    if np.array_equal(elem1, elem2):
-                        model_nr1 = idx1
-                        model_nr2 = idx2
-                        result.append((model_nr1, model_nr2, elem1))
+    points = [tuple(point) for point in points]
+    counter = Counter(points)
+    for point in counter.keys():
+        if counter[point] == 1:
+            color = 'blue'
+        else:
+            color = 'red'
+        result.append({'point': point, 'color': color})
     return result
-
-results = find_same_positions(points)
-
-for model_nr1, model_nr2, position1 in results:
-    print(f"Model {model_nr1} and {model_nr2}")
-    print(points[model_nr1])
-

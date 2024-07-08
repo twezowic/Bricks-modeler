@@ -8,6 +8,7 @@ import Controls from './Controls';
 import { GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { proxy } from 'valtio';
 import { ip } from "./utils"
+import { v4 as uuidv4 } from 'uuid';
 
 const state = proxy({ current: null, mode: 0 });
 
@@ -17,7 +18,7 @@ export default function Modeler({ color, model }) {
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const glRef = useRef(null);
-  const [counter, setCounter] = useState(0);
+  const [points, setPoints] = useState([]);
 
   useEffect(() => {
     prevModelsRef.current = models;
@@ -36,6 +37,8 @@ export default function Modeler({ color, model }) {
         const newModels = models.filter(model => model.name !== state.current);
         setModels(newModels);
         state.current = null;
+      } else if (event.key === 'k') {
+        getConnection();
       }
     };
 
@@ -45,6 +48,34 @@ export default function Modeler({ color, model }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   });
+
+  const getConnection = async () => {
+    try {
+        const response = await fetch(`${ip}/connection`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'models': models })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        const newPoints = data.map(item => ({
+            point: item.point,
+            color: item.color
+        }));
+        setPoints(newPoints);
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+};
+
 
   function setBeginPosition(model, vector) {
     const result = [];
@@ -63,13 +94,12 @@ export default function Modeler({ color, model }) {
   const addNewModel = async (color, model) => {
     const start_translation = await getBeginPosition(model);
     const newModel = {
-      name: `model-${counter}`,
+      name: `model-${uuidv4()}`,
       gltfPath: model,
       position: setBeginPosition([0, 0, 0], start_translation),
       rotation: [0, 0, 0],
       color: color
     };
-    setCounter(counter + 1);
     setModels((prevModels) => [...prevModels, newModel]);
   };
 
@@ -83,7 +113,6 @@ export default function Modeler({ color, model }) {
   const saveScene = async () => {
     const thumbnail = await generateThumbnail();
     const sceneData = JSON.stringify({ models, thumbnail });
-    console.log(sceneData);
     var a = document.createElement('a');
     var blob = new Blob([sceneData], { 'type': 'application/json' });
     a.href = window.URL.createObjectURL(blob);
@@ -138,6 +167,26 @@ export default function Modeler({ color, model }) {
     input.click();
   };
 
+
+  const Points = ({ data }) => {
+    return (
+      <>
+        {data.map((point, index) => (
+          <Point key={index} position={point.point} color={point.color}/>
+        ))}
+      </>
+    );
+  };
+
+  const Point = ({ position, color }) => {
+    return (
+      <mesh position={position}>
+        <sphereGeometry args={[5, 10, 10]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    );
+  };
+
   return (
     <div className='canvas'>
       <Canvas camera={{ position: [0, 10, 10], fov: 50 }} onCreated={({ gl, scene, camera }) => {
@@ -161,6 +210,7 @@ export default function Modeler({ color, model }) {
                 onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
               />
             ))}
+            <Points data={points} />
           </group>
           <Ground />
         </Suspense>

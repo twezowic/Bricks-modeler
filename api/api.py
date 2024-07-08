@@ -4,6 +4,7 @@ from pydantic import BaseModel
 # from mongo import get_model_db, add_track_db, get_track_db
 import database.mysqldb as mysqldb
 import database.mongodb as mongodb
+from database.connection import connection_for_api
 import json
 
 app = FastAPI()
@@ -27,12 +28,25 @@ async def get_thumbnails():
 @app.get('/model/{id}')
 async def get_model(id: str):
     result = mongodb.get_model(id)
-    print(result)
     if result:
         return json.loads(result)
     else:
         return HTTPException(status_code=404, detail="Model not found.")
 
+
+class Scene(BaseModel):
+    models: list
+
+
+@app.post('/connection')
+async def get_connections(models: Scene):
+    result = connection_for_api(models)
+
+    # Konwersja tuple z int na int
+    for point in result:
+        point['point'] = tuple(map(int, point['point']))
+
+    return result
 
 # class Track(BaseModel):
 #     name: str
