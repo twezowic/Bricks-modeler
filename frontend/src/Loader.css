@@ -1,0 +1,15 @@
+.thumbnail-viewer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    justify-items: center;
+  }
+
+  .thumbnail-item {
+    width: 400px;
+    height: 400px;
+    border-radius: 2px;
+    border-color: azure;
+    object-fit: cover;
+    cursor: pointer;
+  }

@@ -19,12 +19,12 @@ Do zrobienia mniejsze:
 - ograniczyć kamerę żeby nie mogła iść pod spód
 - w mysqldb zostały utworzony plik csv z klockami które nie mają preview. Należy coś z nimi zrobić i pamiętać że zestawy pewnie z nich korzystają. Plik: without_thumbnail
 - ustawianie begin_position i modelu dwukrtonie odwołuje się do api
-- sprawdzić jak id jest zapisywane w mongo.db
-- rozdzielić thumnail i plik z postępem do bazy danych
 - stawiać element w odległości min element - stała - wymyśleć coś lepszego po okręgu?
 - napisać funkcję rekurencyjną która przyjmuje model_name i sprawdza w góre które elementy są połączone
 - zrobić focus podczas pisania że skróty klawiszowe nie działają
 - zrobić przesuwanie elementów zamiast skrótu żeby dodawać elementy
+- przy zapisywaniu modeli zrobić że jak zapisuje wczytany to nadpisywać czyli przekazywać track_id
+- zamienić że tracks jest w localStorage/sessionStorage
 
 
 do zrobienia później:
@@ -41,3 +41,5 @@ gdy odtwarzany model to wczytuje wszystkie elementy (może z ekranem loadingu), 
 - nie do końca działa ta kolizja, np. element ze spadkiem
 - problem z kolizją po obrotach w okół osi x i y
 - znaleziony 'blad' gdy ten sam id ma element to wszystkie porusza -> może wykorzystać do poruszania paru na raz?
+
+

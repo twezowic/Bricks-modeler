@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from bson import ObjectId
 import os
 
 client = MongoClient('mongodb://localhost:27017/')
@@ -31,21 +32,30 @@ def get_model(model_name):
         print(f"Model {model_name} not found.")
 
 
-def add_track_db(name, track, thumbnail, user_id=None):
+def add_track(name, track, thumbnail, user_id=0):
     model_document = {
         'name': name,
         'track': track,
         'thumbnail': thumbnail,
+        'user_id': user_id,
     }
 
     tracks.insert_one(model_document)
 
 
-def get_track_db(name):
-    result = tracks.find_one({'name': name})
-    return result
+def get_all_tracks(user_id=None):
+    result = tracks.find({}, {'_id': 1, 'thumbnail': 1, 'name': 1})
+    documents_list = []
+    for document in result:
+        document['_id'] = str(document['_id'])
+        documents_list.append(document)
+    return documents_list
+
+
+def get_track(id):
+    return tracks.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0})
 
 
 if __name__ == "__main__":
     # add_models('./gltf')
-    get_model('2926', "./../others")
+    get_model('2926')

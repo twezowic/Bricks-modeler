@@ -26,7 +26,7 @@ export default function Explorer({ setModel, setColorModel }) {
   useEffect(() => {
     const fetchParts = async () => {
       try {
-        const response = await fetch(`${ip}/thumbnails?filter=${filterValue}`);
+        const response = await fetch(`${ip}/parts?filter=${filterValue}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
