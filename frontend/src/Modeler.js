@@ -1,5 +1,6 @@
 import './App.css';
 import React, { useEffect, useState, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Model from './Model';
@@ -18,7 +19,19 @@ export default function Modeler({ color, model }) {
   const sceneRef = useRef(null);
   const cameraRef = useRef(null);
   const glRef = useRef(null);
+
   const [points, setPoints] = useState([]);
+  const [tooglePoints, setTooglePoints] = useState(false);
+
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.models) {
+      setModels(location.state.models);
+    } else {
+      setModels([]);
+    }
+  }, [])
 
   useEffect(() => {
     prevModelsRef.current = models;
@@ -38,7 +51,10 @@ export default function Modeler({ color, model }) {
         setModels(newModels);
         state.current = null;
       } else if (event.key === 'Shift') {
-        getConnection();
+        setTooglePoints(!tooglePoints);
+        if (!tooglePoints){
+          getConnection();
+        }
       }
     };
 
@@ -148,7 +164,7 @@ export default function Modeler({ color, model }) {
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 'name': name, 'track': models, 'thumbnail': thumbnail })
+          body: JSON.stringify({ 'name': name, 'track': models, 'thumbnail': thumbnail, 'user_id': '0' })
       });
 
       if (!response.ok) {
@@ -232,7 +248,10 @@ export default function Modeler({ color, model }) {
                 onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
               />
             ))}
-            <Points data={points} />
+            {tooglePoints &&
+              <Points data={points} />
+            }
+
           </group>
           <Ground />
         </Suspense>
