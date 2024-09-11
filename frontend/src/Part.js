@@ -1,12 +1,12 @@
 import React from 'react';
 
-export default function Part({ imageUrl, name, onClick, isSelected }) {
+export default function Part({ imageUrl, name, draggable, onDragStart }) {
   return (
     <img
       src={imageUrl}
       alt={name}
-      onClick={onClick}
-      className={isSelected ? 'selected' : ''}
+      draggable={draggable} // Dodaj atrybut draggable
+      onDragStart={onDragStart} // Dodaj obsługę przeciągania
     />
   );
 }

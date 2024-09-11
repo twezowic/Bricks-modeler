@@ -3,20 +3,13 @@ import Part from './Part';
 import React, { useState, useEffect } from 'react';
 import { ip } from "./utils"
 
-export default function Explorer({ setModel, setColorModel }) {
+export default function Explorer({ setColorModel }) {
   const [color, setColor] = useState("#ff0000");
-  const [selectedModel, setSelectedModel] = useState(0);
 
   const handleColorChange = (e) => {
     const newColor = e.target.value;
     setColorModel(newColor);
     setColor(newColor);
-  };
-
-  const handleSelectModel = (modelName, listNum) => {
-    console.log('Selected model:', modelName);
-    setModel(modelName);
-    setSelectedModel(listNum);
   };
 
   const [parts, setParts] = useState([]);
@@ -44,8 +37,8 @@ export default function Explorer({ setModel, setColorModel }) {
       <Part
         imageUrl={part.imageUrl}
         name={part.name}
-        onClick={() => handleSelectModel(part.name, index)}
-        isSelected={selectedModel === index}
+        draggable // <-- Umożliwia przeciąganie elementu
+        onDragStart={(event) => handleDragStart(event, part.name)} // <-- Obsługa przeciągania
       />
     </li>
   ));
@@ -54,13 +47,19 @@ export default function Explorer({ setModel, setColorModel }) {
     setFilterValue(event.target.value);
   };
 
+  const handleDragStart = (event, part) => {
+    const partData = JSON.stringify(part);
+    event.dataTransfer.setData('model', partData);
+  };
+  
+
   return (
     <div className='panel'>
       <ul className='image-list'>
         {partElements}
       </ul>
       <input type="color" value={color} onChange={handleColorChange} />
-      <input type="text" value={filterValue} onChange={handleFilterChange} placeholder="Filter parts by name" />
+      <input type="text" value={filterValue} onChange={handleFilterChange} />
     </div>
   );
 }

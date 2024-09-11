@@ -13,7 +13,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const state = proxy({ current: null, mode: 0 });
 
-export default function Modeler({ color, model }) {
+export default function Modeler({ color }) {
   const [models, setModels] = useState([]);
   const prevModelsRef = useRef(models);
   const sceneRef = useRef(null);
@@ -40,9 +40,7 @@ export default function Modeler({ color, model }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Tab') {
-        addNewModel(color, model);
-      } else if (event.key === 'Enter') {
+      if (event.key === 'Enter') {
         saveScene();
       } else if (event.key === '\\') {
         loadScene();
@@ -64,6 +62,27 @@ export default function Modeler({ color, model }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   });
+
+  const handleDrop = async (event) => {
+    event.preventDefault();
+    const data = event.dataTransfer.getData('model');
+    
+    // if (!data) {
+    //   return;
+    // }
+    
+    try {
+      const part = JSON.parse(data);
+      addNewModel(color, part);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  
+  
+  const handleDragOver = (event) => {
+    event.preventDefault(); // Umożliwia upuszczanie na ten element
+  };
 
   const getConnection = async () => {
     try {
@@ -226,7 +245,11 @@ export default function Modeler({ color, model }) {
   };
 
   return (
-    <div className='canvas'>
+    <div
+    className="canvas"
+    onDrop={handleDrop}    // Obsługa upuszczenia
+    onDragOver={handleDragOver} // Obsługa przeciągania nad obszarem
+  >
       <Canvas camera={{ position: [0, 10, 10], fov: 50 }} onCreated={({ gl, scene, camera }) => {
         glRef.current = gl;
         sceneRef.current = scene;
