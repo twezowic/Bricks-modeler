@@ -1,17 +1,17 @@
-# https://stackoverflow.com/questions/39281594/error-1698-28000-access-denied-for-user-rootlocalhost
-
 import mysql.connector
 
 host = 'localhost'
 database = 'LEGO'
 user = 'root'
+password = 'root'
 
 def get_inventory_parts(inventory_id):
     try:
         connection = mysql.connector.connect(
             host=host,
             database=database,
-            user=user
+            user=user,
+            password=password
         )
 
         if connection.is_connected():
@@ -41,7 +41,8 @@ def get_part_description(part_num):
         connection = mysql.connector.connect(
             host=host,
             database=database,
-            user=user
+            user=user,
+            password=password
         )
 
         if connection.is_connected():
@@ -70,7 +71,8 @@ def get_parts_thumbnail():
         connection = mysql.connector.connect(
             host=host,
             database=database,
-            user=user
+            user=user,
+            password=password
         )
 
         if connection.is_connected():
@@ -101,7 +103,8 @@ def get_filtered_parts(filter_value):
         connection = mysql.connector.connect(
             host=host,
             database=database,
-            user=user
+            user=user,
+            password=password
         )
 
         if connection.is_connected():
