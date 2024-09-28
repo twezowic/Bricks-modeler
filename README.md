@@ -86,3 +86,13 @@ i jakaś tabela Review zawierająca:
 W odtwarzaniu modelu:
 porównywanie postępu w plikach json i sprawdzanie różnic pomiędzy
 względnym położeniem (relative location) obiektów w scenie oraz ich rotacji.
+
+
+Jak uruchomić:
+
+frontend:
+npm start
+
+api:
+./database/start.sh
+uvicorn api:app --reload

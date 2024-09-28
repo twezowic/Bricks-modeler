@@ -7,6 +7,7 @@ db = client['LEGO']
 models = db['Models']
 tracks = db['Tracks']
 
+
 def add_models(folder_path):
     for file_name in os.listdir(folder_path):
         file_path = os.path.join(folder_path, file_name)
@@ -57,5 +58,5 @@ def get_track(id):
 
 
 if __name__ == "__main__":
-    # add_models('./gltf')
-    get_model('2926')
+    add_models('./gltf')
+    # get_model('2926')
