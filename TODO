@@ -2,7 +2,7 @@ Do sprawdzenia:
 
 - GLTF i Clone żeby nie wczytywać ten sam obiekt parę razy
 - elastic search
-
+- czy da się żeby obiekt pojawiał się mniej więcej w tym miejscu gdzie go przesunąłem
 
 
 Do zrobienia większe:
@@ -11,6 +11,7 @@ Do zrobienia większe:
 - ujednolicić miniaturki można napisać skrypt w blenderze który wczyta pliki bez materiałów i zrobi ich zrzut ekranu
 - wczytywać elementy w odpowiednim momencie
 - Do logowania użytkowników gotowy komponent: auth0 lub keycloak, userfront https://userfront.com/docs/toolkit/install/login-form-react
+- łączenie elementów połączone z logiką przesuwania, usuwać można tylko górny dolny element
 
 
 Do zrobienia mniejsze:
@@ -22,7 +23,6 @@ Do zrobienia mniejsze:
 - stawiać element w odległości min element - stała - wymyśleć coś lepszego po okręgu?
 - napisać funkcję rekurencyjną która przyjmuje model_name i sprawdza w góre które elementy są połączone
 - zrobić focus podczas pisania że skróty klawiszowe nie działają
-- zrobić przesuwanie elementów zamiast skrótu żeby dodawać elementy
 - przy zapisywaniu modeli zrobić że jak zapisuje wczytany to nadpisywać czyli przekazywać track_id
 - zamienić że tracks jest w localStorage/sessionStorage
 
@@ -43,3 +43,19 @@ gdy odtwarzany model to wczytuje wszystkie elementy (może z ekranem loadingu), 
 - znaleziony 'blad' gdy ten sam id ma element to wszystkie porusza -> może wykorzystać do poruszania paru na raz?
 
 
+spotkanie poprzednie:
+
+    Create places where blocks can connect
+    think about algorithm how to do this automatically
+    Connect elements
+    allow user to move 
+    selecting
+    progress tracking
+
+
+może wyjąć metadane z plików gltf żeby nie odwoływać się do nich oprócz wyświetlania i dodać wtedy do bazy mysql
+baza mysql zmniejszyć ma zostać:
+    - PARTS: part_num, description
+    - THUMBNAIL: part_num, img_url
+    - METADATA: 3 wymiary z pliku gltf zaokgrąglając w górę do 20/20/8
+to wszystko raczej do jednej tabeli i pewnie przerzucić też do mongo żeby wszystko było. Sets, color i inventory_parts tylko gdy wczytywać oficjalne zestawy

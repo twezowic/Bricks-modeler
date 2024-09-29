@@ -5,8 +5,8 @@ export default function Part({ imageUrl, name, draggable, onDragStart }) {
     <img
       src={imageUrl}
       alt={name}
-      draggable={draggable} // Dodaj atrybut draggable
-      onDragStart={onDragStart} // Dodaj obsługę przeciągania
+      draggable={draggable}
+      onDragStart={onDragStart}
     />
   );
 }

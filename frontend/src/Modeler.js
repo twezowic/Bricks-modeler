@@ -11,7 +11,7 @@ import { proxy } from 'valtio';
 import { ip } from "./utils"
 import { v4 as uuidv4 } from 'uuid';
 
-const state = proxy({ current: null, mode: 0 });
+const state = proxy({ mode: 0, selected: [] });
 
 export default function Modeler({ color }) {
   const [models, setModels] = useState([]);
@@ -43,11 +43,11 @@ export default function Modeler({ color }) {
       if (event.key === 'Enter') {
         saveScene();
       } else if (event.key === '\\') {
-        loadScene();
+        // loadScene();
       } else if (event.key === 'Delete') {
-        const newModels = models.filter(model => model.name !== state.current);
-        setModels(newModels);
-        state.current = null;
+        // const newModels = models.filter(model => model.name !== state.models); // do zmiany
+        // setModels(newModels);
+        // state.models = null;
       } else if (event.key === 'Shift') {
         setTooglePoints(!tooglePoints);
         if (!tooglePoints){
@@ -81,7 +81,7 @@ export default function Modeler({ color }) {
   
   
   const handleDragOver = (event) => {
-    event.preventDefault(); // Umożliwia upuszczanie na ten element
+    event.preventDefault();
   };
 
   const getConnection = async () => {
@@ -247,8 +247,8 @@ export default function Modeler({ color }) {
   return (
     <div
     className="canvas"
-    onDrop={handleDrop}    // Obsługa upuszczenia
-    onDragOver={handleDragOver} // Obsługa przeciągania nad obszarem
+    onDrop={handleDrop}
+    onDragOver={handleDragOver}
   >
       <Canvas camera={{ position: [0, 10, 10], fov: 50 }} onCreated={({ gl, scene, camera }) => {
         glRef.current = gl;
