@@ -2,11 +2,11 @@ import { Grid } from '@react-three/drei'
 
 export default function Ground() {
     const gridConfig = {
-      cellSize: 0.75,
+      cellSize: 1,
       cellThickness: 0.5,
       cellColor: '#6f6f6f',
 
-      sectionSize: 3,
+      sectionSize: 4,
       sectionThickness: 1,
       sectionColor: '#9d4b4b',
       fadeDistance: 30,
