@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ip } from './utils';
 import './Loader.css';
+import LoginButton from './Account/login';
+import LogoutButton from './Account/logout';
+import Profile from './Account/profile';
 
 function Loader() {
   const [thumbnails, setThumbnails] = useState([]);
@@ -50,6 +53,8 @@ function Loader() {
         onClick={handleAddNewModel}
         className="thumbnail-item"
       />
+      <LoginButton/>
+      <LogoutButton/>
     </div>
   );
 }

@@ -33,7 +33,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
   });
 
   function metadataEqual(meta1, meta2) {
-    return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta2[2] === meta2[2];
+    return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
   }
 
   async function handleClick(e) {
@@ -62,7 +62,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     <mesh
       ref={ref}
       onClick={handleClick}
-      onPointerMissed={(e) => e.type === 'click' && (state.selected = [])}   // Trzeba to zmienić żeby dało się dodawać wybrany element
+      onPointerMissed={(e) => e.type === 'click' && (state.selected = [])}
       onContextMenu={(e) => snap.current === name && (e.stopPropagation(), (state.mode = (snap.mode + 1) % modes.length))}
       onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
       onPointerOut={(e) => setHovered(false)}

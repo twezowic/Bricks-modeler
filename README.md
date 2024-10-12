@@ -13,6 +13,7 @@ Wykorzystywane techonlogie:
     - FAST API w pythonie do komunikacji z bazami danych
     - Python + Blender do wstępnego przetworzenia plików graficznych
     - Baza danych MySql i MongoDB
+    - auth0 do autoryzacji użytkowników
 
 Wymagania:
 Funkcjonalne:

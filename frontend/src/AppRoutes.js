@@ -1,5 +1,6 @@
 import Main from "./Main";
 import Loader from "./Loader";
+import Profile from "./Account/profile";
 
 const AppRoutes = [
     {
@@ -9,6 +10,10 @@ const AppRoutes = [
     {
     path: '/loader',
     element: < Loader />
+    },
+    {
+    path: '/profile',
+    element: <Profile />
     },
 ];
 
