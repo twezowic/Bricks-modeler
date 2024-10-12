@@ -37,8 +37,8 @@ export default function Explorer({ setColorModel }) {
       <Part
         imageUrl={part.imageUrl}
         name={part.name}
-        draggable // <-- Umożliwia przeciąganie elementu
-        onDragStart={(event) => handleDragStart(event, part.name)} // <-- Obsługa przeciągania
+        draggable
+        onDragStart={(event) => handleDragStart(event, part.name)}
       />
     </li>
   ));

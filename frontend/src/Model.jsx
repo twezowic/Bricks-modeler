@@ -7,7 +7,7 @@ import { ip } from './utils';
 
 const modes = ['translate', 'rotate'];
 
-export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, ...props }) {
+export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, getConnection={getConnection}, groups, ...props }) {
   const snap = useSnapshot(state);
   const [hovered, setHovered] = useState(false);
   const { nodes } = useGLTF(`${ip}/model/${gltfPath}`);
@@ -36,14 +36,25 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta2[2] === meta2[2];
   }
 
-  // logika do zmienienia
-  function handleClick(e) {
+  async function handleClick(e) {
     e.stopPropagation();
+    await getConnection();
 
-    if (snap.selected.includes(name)) {
-      state.selected = state.selected.filter(item => item !== name);
-    } else {
-      state.selected = [...state.selected, name];
+    var found = false;
+
+    if (state.selected.includes(name)) {
+      state.selected = [name]
+    }
+    else {
+      groups.forEach(group => {
+        if (group.includes(name)){
+          state.selected = group;
+          found = true;
+        }
+      });
+      if (!found) {
+        state.selected = [name]
+      }
     }
   }
 
@@ -51,7 +62,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     <mesh
       ref={ref}
       onClick={handleClick}
-      onPointerMissed={(e) => e.type === 'click' && (state.current = null)}   // Trzeba to zmienić żeby dało się dodawać wybrany element
+      onPointerMissed={(e) => e.type === 'click' && (state.selected = [])}   // Trzeba to zmienić żeby dało się dodawać wybrany element
       onContextMenu={(e) => snap.current === name && (e.stopPropagation(), (state.mode = (snap.mode + 1) % modes.length))}
       onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
       onPointerOut={(e) => setHovered(false)}

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import numpy as np
 from pprint import pprint
 import csv
-from collections import Counter
+from collections import Counter, defaultdict
 from math import pi
 
 from database.mysqldb import get_part_description
@@ -45,7 +45,7 @@ class Model:
                     result_bottom[j, i, 1] = int(self.middle[1] - 20 * half_x + j * 20+10)
                     result_bottom[j, i, 0] = int(self.middle[0] - 20 * half_y + i * 20+10)
             result_top = np.copy(result_bottom)
-            result_top[:, : , 2] = top
+            result_top[:, :, 2] = top
             result = np.concatenate((result_bottom, result_top))
 
             result = self.apply_rotation(result)
@@ -127,28 +127,47 @@ def check_connection(scene):
     for model in Model.from_json(scene):
         connect = model.get_insertions()
         if connect is not None:
-            # points.append((model.name, connect))
-            for point in connect:
-                points.extend(point)
+            points.append((model.name, connect))
     return points
 
 
+# zamienić żeby zwracało także grupy pojedyńcze
+def find_connected_groups(scene):
+    models = check_connection(scene.models)
+    coordinate_map = defaultdict(list)
 
-# scene = [{"name":"model-0","gltfPath":"3062b","position":[10,10,48],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-1","gltfPath":"3062b","position":[10,10,72],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-2","gltfPath":"3062b","position":[10,10,96],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-3","gltfPath":"3062b","position":[10,10,24],"rotation":[0,0,0],"color":"#63452c"},{"name":"model-4","gltfPath":"30176","position":[10,10,120],"rotation":[0,0,0],"color":"#26a269"},{"name":"model-5","gltfPath":"30176","position":[10,10,144],"rotation":[0,0,-3.141592653589793],"color":"#26a269"},{"name":"model-7","gltfPath":"3003","position":[-30,-60,24],"rotation":[0,0,0],"color":"#f6d32d"},{"name":"model-9","gltfPath":"4865a","position":[-40,-60,48],"rotation":[0,0,1.5707963267948966],"color":"#f6d32d"},{"name":"model-10","gltfPath":"3069b","position":[-20,-60,32],"rotation":[0,0,-1.5707963267948966],"color":"#f6d32d"},{"name":"model-13","gltfPath":"2343","position":[-20,-20,40],"rotation":[0,0,0],"color":"#a51d2d"}]
-# points = check_connection(scene)
-# pprint(points)
+    for model_name, coordinates in models:
+        for coord_set in coordinates.reshape(-1, coordinates.shape[-1]):
+            key = tuple(coord_set)
+            coordinate_map[key].append(model_name)
 
+    graph = defaultdict(set)
 
-def connection_for_api(scene) -> dict:
-    points = check_connection(scene.models)
+    for models_with_same_coords in coordinate_map.values():
+        for i in range(len(models_with_same_coords)):
+            for j in range(i + 1, len(models_with_same_coords)):
+                graph[models_with_same_coords[i]].add(models_with_same_coords[j])
+                graph[models_with_same_coords[j]].add(models_with_same_coords[i])
 
-    result = []
-    points = [tuple(point) for point in points]
-    counter = Counter(points)
-    for point in counter.keys():
-        if counter[point] == 1:
-            color = 'blue'
-        else:
-            color = 'red'
-        result.append({'point': point, 'color': color})
-    return result
+    def dfs(model, visited):
+        stack = [model]
+        group = []
+
+        while stack:
+            current_model = stack.pop()
+            if current_model not in visited:
+                visited.add(current_model)
+                group.append(current_model)
+                stack.extend(graph[current_model] - visited)
+
+        return group
+
+    visited = set()
+    groups = []
+
+    for model in graph:
+        if model not in visited:
+            group = dfs(model, visited)
+            groups.append(group)
+
+    return groups

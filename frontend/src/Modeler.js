@@ -20,8 +20,7 @@ export default function Modeler({ color }) {
   const cameraRef = useRef(null);
   const glRef = useRef(null);
 
-  const [points, setPoints] = useState([]);
-  const [tooglePoints, setTooglePoints] = useState(false);
+  const [groups, setGroups] = useState([]);
 
   const location = useLocation();
 
@@ -48,11 +47,6 @@ export default function Modeler({ color }) {
         // const newModels = models.filter(model => model.name !== state.models); // do zmiany
         // setModels(newModels);
         // state.models = null;
-      } else if (event.key === 'Shift') {
-        setTooglePoints(!tooglePoints);
-        if (!tooglePoints){
-          getConnection();
-        }
       }
     };
 
@@ -86,7 +80,7 @@ export default function Modeler({ color }) {
 
   const getConnection = async () => {
     try {
-        const response = await fetch(`${ip}/connection`, {
+        const response = await fetch(`${ip}/connection2`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -99,12 +93,8 @@ export default function Modeler({ color }) {
         }
 
         const data = await response.json();
-
-        const newPoints = data.map(item => ({
-            point: item.point,
-            color: item.color
-        }));
-        setPoints(newPoints);
+        setGroups(data);
+        console.log(data)
 
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -225,25 +215,6 @@ export default function Modeler({ color }) {
   };
 
 
-  const Points = ({ data }) => {
-    return (
-      <>
-        {data.map((point, index) => (
-          <Point key={index} position={point.point} color={point.color}/>
-        ))}
-      </>
-    );
-  };
-
-  const Point = ({ position, color }) => {
-    return (
-      <mesh position={position}>
-        <sphereGeometry args={[5, 10, 10]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    );
-  };
-
   return (
     <div
     className="canvas"
@@ -269,11 +240,10 @@ export default function Modeler({ color }) {
                 state={state}
                 color={model.color}
                 onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
+                groups={groups}
+                getConnection={getConnection}
               />
             ))}
-            {tooglePoints &&
-              <Points data={points} />
-            }
 
           </group>
           <Ground />

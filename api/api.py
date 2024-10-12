@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import database.mysqldb as mysqldb
 import database.mongodb as mongodb
-from database.connection import connection_for_api
+from database.connection import connection_for_api, find_connected_groups
 import json
 
 app = FastAPI()
@@ -42,6 +42,13 @@ async def get_connections(models: Scene):
 
     for point in result:
         point['point'] = tuple(map(int, point['point']))
+
+    return result
+
+
+@app.post('/connection2')
+async def get_connections2(models: Scene):
+    result = find_connected_groups(models)
 
     return result
 
