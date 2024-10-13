@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import database.mysqldb as mysqldb
 import database.mongodb as mongodb
-from database.connection import connection_for_api, find_connected_groups
+from database.connection import find_connected_groups
 import json
 
 app = FastAPI()
@@ -37,20 +37,11 @@ class Scene(BaseModel):
 
 
 @app.post('/connection')
-async def get_connections(models: Scene):
-    result = connection_for_api(models)
-
-    for point in result:
-        point['point'] = tuple(map(int, point['point']))
-
-    return result
-
-
-@app.post('/connection2')
 async def get_connections2(models: Scene):
     result = find_connected_groups(models)
 
     return result
+
 
 class Track(BaseModel):
     name: str
@@ -62,25 +53,21 @@ class Track(BaseModel):
 @app.post("/tracks")
 async def save_track(track: Track):
     try:
-        mongodb.add_track(track.name, track.track, track.thumbnail)
+        mongodb.add_track(track.name, track.track, track.thumbnail, track.user_id)
         return {"message": "Track added successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/tracks")
-async def get_tracks():
-    result = mongodb.get_all_tracks()
-    if result:
-
-        return result
-    else:
-        raise HTTPException(status_code=404, detail="Track not found")
+@app.get("/tracks/user/{user_id}")
+async def get_tracks(user_id: str):
+    result = mongodb.get_all_tracks(user_id)
+    return result
 
 
-@app.get("/tracks/{id}")
-async def get_tracks(id: str):
-    result = mongodb.get_track(id)
+@app.get("/tracks/{track_id}")
+async def get_track(track_id: str):
+    result = mongodb.get_track(track_id)
     if result:
         return result
     else:

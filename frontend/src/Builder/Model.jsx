@@ -3,11 +3,11 @@ import { useSnapshot } from 'valtio';
 import { useGLTF, useCursor } from '@react-three/drei';
 import * as THREE from "three";
 import { useFrame } from '@react-three/fiber';
-import { ip } from './utils';
+import { ip } from '../utils';
 
 const modes = ['translate', 'rotate'];
 
-export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, getConnection={getConnection}, groups, ...props }) {
+export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, groups, ...props }) {
   const snap = useSnapshot(state);
   const [hovered, setHovered] = useState(false);
   const { nodes } = useGLTF(`${ip}/model/${gltfPath}`);
@@ -36,25 +36,19 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
   }
 
-  async function handleClick(e) {
+  function handleClick(e) {
     e.stopPropagation();
-    await getConnection();
 
     var found = false;
-
-    if (state.selected.includes(name)) {
-      state.selected = [name]
-    }
-    else {
-      groups.forEach(group => {
-        if (group.includes(name)){
-          state.selected = group;
-          found = true;
-        }
-      });
-      if (!found) {
-        state.selected = [name]
+    
+    groups.forEach(group => {
+      if (group.includes(name)){
+        state.selected = group;
+        found = true;
       }
+    });
+    if (!found) {
+      state.selected = [name]
     }
   }
 

@@ -2,18 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ip } from './utils';
 import './Loader.css';
-import LoginButton from './Account/login';
-import LogoutButton from './Account/logout';
-import Profile from './Account/profile';
+import { useAuth0 } from '@auth0/auth0-react';
 
 function Loader() {
   const [thumbnails, setThumbnails] = useState([]);
   const navigate = useNavigate();
+  const { user } = useAuth0();
 
   useEffect(() => {
     const loadThumbnails = async () => {
-      const response = await fetch(`${ip}/tracks`);
+      const response = await fetch(`${ip}/tracks/user/${encodeURIComponent(user.sub)}`);
       const data = await response.json();
+      console.log(data)
       setThumbnails(data);
     };
 
@@ -38,23 +38,23 @@ function Loader() {
 
   return (
     <div className="thumbnail-viewer">
-      {thumbnails.map((thumb, index) => (
-        <img
-          key={index}
-          src={thumb.thumbnail}
-          alt={thumb.name}
-          onClick={() => handleThumbnailClick(thumb._id)}
-          className="thumbnail-item"
-        />
-      ))}
+      {thumbnails && 
+        thumbnails.map((thumb, index) => (
+          <img
+            key={index}
+            src={thumb.thumbnail}
+            alt={thumb.name}
+            onClick={() => handleThumbnailClick(thumb._id)}
+            className="thumbnail-item"
+          />
+        ))
+      }
       <img
         src="./plus.png"
         alt="Add new model"
         onClick={handleAddNewModel}
         className="thumbnail-item"
       />
-      <LoginButton/>
-      <LogoutButton/>
     </div>
   );
 }

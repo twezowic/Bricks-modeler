@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useThree } from '@react-three/fiber';
 import { useSnapshot } from 'valtio';
 import { TransformControls } from '@react-three/drei';
@@ -9,11 +9,12 @@ const step = 10;
 const vertical = 8;
 const rotationStep = Math.PI / 2;
 
-export default function Controls({ state }) {
+export default function Controls({ state, getConnection }) {
   const snap = useSnapshot(state);
   const { scene, camera, gl } = useThree();
   const transformControls = useRef();
-  const initialTransforms = useRef({}); 
+  const initialTransforms = useRef({});
+  const [isMovingDisabled, setMovingDisabled] = useState(false);
 
   function roundPosition(object) {
     if (transformControls.current.mode === 'translate') {
@@ -71,13 +72,26 @@ export default function Controls({ state }) {
         });
       };
 
+      const onFinishMove = async () => {
+        setMovingDisabled(true);
+        try {
+          await getConnection();
+        } catch (error) {
+          console.error("Error fetching groups:", error);
+        } finally {
+          setMovingDisabled(false);
+        }
+      };
+
       controls.addEventListener('objectChange', onChange);
+      controls.addEventListener('mouseUp', onFinishMove);
 
       return () => {
         controls.removeEventListener('objectChange', onChange);
+        controls.removeEventListener('mouseUp', onFinishMove);
       };
     }
-  }, [snap.selected, snap.mode, scene]);
+  }, [snap.selected, snap.mode, scene, getConnection]);
 
   useEffect(() => {
     snap.selected.forEach((name) => {
@@ -101,7 +115,7 @@ export default function Controls({ state }) {
 
   return (
     <>
-      {snap.selected.length > 0 && (
+      {snap.selected.length > 0 && !isMovingDisabled && (
         <TransformControls
           ref={transformControls}
           object={scene.getObjectByName(snap.selected[0])}

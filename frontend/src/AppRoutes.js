@@ -1,4 +1,4 @@
-import Main from "./Main";
+import Main from "./Builder/Main";
 import Loader from "./Loader";
 import Profile from "./Account/profile";
 

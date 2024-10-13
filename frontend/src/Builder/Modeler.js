@@ -1,15 +1,16 @@
-import './App.css';
+import '.././App.css';
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Model from './Model';
 import Ground from './Ground';
-import Controls from './Controls';
+import Controls from '../Controls';
 import { GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { proxy } from 'valtio';
-import { ip } from "./utils"
+import { ip } from "../utils"
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth0 } from '@auth0/auth0-react';
 
 const state = proxy({ mode: 0, selected: [] });
 
@@ -23,6 +24,8 @@ export default function Modeler({ color }) {
   const [groups, setGroups] = useState([]);
 
   const location = useLocation();
+
+  const { user, isAuthenticated } = useAuth0();
 
   useEffect(() => {
     if (location.state?.models) {
@@ -39,7 +42,7 @@ export default function Modeler({ color }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
+      if (isAuthenticated && event.key === 'Enter') {
         saveScene();
       } else if (event.key === '\\') {
         // loadScene();
@@ -80,7 +83,7 @@ export default function Modeler({ color }) {
 
   const getConnection = async () => {
     try {
-        const response = await fetch(`${ip}/connection2`, {
+        const response = await fetch(`${ip}/connection`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -159,12 +162,12 @@ export default function Modeler({ color }) {
 
   const saveScene = async () => {
     const thumbnail = await generateThumbnail();
-    const sceneData = JSON.stringify({ models, thumbnail });
-    var a = document.createElement('a');
-    var blob = new Blob([sceneData], { 'type': 'application/json' });
-    a.href = window.URL.createObjectURL(blob);
-    a.download = 'scene.json';
-    a.click();
+    // const sceneData = JSON.stringify({ models, thumbnail });
+    // var a = document.createElement('a');
+    // var blob = new Blob([sceneData], { 'type': 'application/json' });
+    // a.href = window.URL.createObjectURL(blob);
+    // a.download = 'scene.json';
+    // a.click();
 
     try {
       const name = "a";
@@ -173,7 +176,7 @@ export default function Modeler({ color }) {
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 'name': name, 'track': models, 'thumbnail': thumbnail, 'user_id': '0' })
+          body: JSON.stringify({ 'name': name, 'track': models, 'thumbnail': thumbnail, 'user_id': user.sub })
       });
 
       if (!response.ok) {
@@ -198,21 +201,21 @@ export default function Modeler({ color }) {
     });
   };
 
-  const loadScene = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.json';
-    input.onchange = e => {
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = () => {
-        const loadedModels = JSON.parse(reader.result)["models"];
-        setModels(loadedModels);
-      };
-      reader.readAsText(file);
-    };
-    input.click();
-  };
+  // const loadScene = () => {
+  //   const input = document.createElement('input');
+  //   input.type = 'file';
+  //   input.accept = '.json';
+  //   input.onchange = e => {
+  //     const file = e.target.files[0];
+  //     const reader = new FileReader();
+  //     reader.onload = () => {
+  //       const loadedModels = JSON.parse(reader.result)["models"];
+  //       setModels(loadedModels);
+  //     };
+  //     reader.readAsText(file);
+  //   };
+  //   input.click();
+  // };
 
 
   return (
@@ -241,14 +244,13 @@ export default function Modeler({ color }) {
                 color={model.color}
                 onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
                 groups={groups}
-                getConnection={getConnection}
               />
             ))}
 
           </group>
           <Ground />
         </Suspense>
-        <Controls state={state} />
+        <Controls state={state} getConnection={getConnection}/>
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport axisColors={['#9d4b4b', '#2f7f4f', '#3b5b9d']} labelColor="white" />
         </GizmoHelper>

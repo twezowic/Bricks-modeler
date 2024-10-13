@@ -1,7 +1,7 @@
-import './App.css';
+import '.././App.css';
 import Part from './Part';
 import React, { useState, useEffect } from 'react';
-import { ip } from "./utils"
+import { ip } from "../utils"
 
 export default function Explorer({ setColorModel }) {
   const [color, setColor] = useState("#ff0000");
@@ -60,6 +60,6 @@ export default function Explorer({ setColorModel }) {
       </ul>
       <input type="color" value={color} onChange={handleColorChange} />
       <input type="text" value={filterValue} onChange={handleFilterChange} />
-    </div>
+    </div> 
   );
 }

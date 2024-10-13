@@ -131,7 +131,6 @@ def check_connection(scene):
     return points
 
 
-# zamienić żeby zwracało także grupy pojedyńcze
 def find_connected_groups(scene):
     models = check_connection(scene.models)
     coordinate_map = defaultdict(list)
@@ -169,5 +168,11 @@ def find_connected_groups(scene):
         if model not in visited:
             group = dfs(model, visited)
             groups.append(group)
+
+    all_model_names = {model_name for model_name, _ in models}
+    unconnected_models = all_model_names - set(graph.keys())
+
+    for model in unconnected_models:
+        groups.append([model])
 
     return groups
