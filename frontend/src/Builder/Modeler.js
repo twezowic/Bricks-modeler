@@ -5,7 +5,7 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Model from './Model';
 import Ground from './Ground';
-import Controls from '../Controls';
+import Controls from './Controls';
 import { GizmoHelper, GizmoViewport } from '@react-three/drei';
 import { proxy } from 'valtio';
 import { ip } from "../utils"
@@ -47,9 +47,9 @@ export default function Modeler({ color }) {
       } else if (event.key === '\\') {
         // loadScene();
       } else if (event.key === 'Delete') {
-        // const newModels = models.filter(model => model.name !== state.models); // do zmiany
-        // setModels(newModels);
-        // state.models = null;
+        const newModels = models.filter(model => !state.selected.includes(model.name));
+        setModels(newModels);
+        state.selected = [];
       }
     };
 
@@ -132,11 +132,39 @@ export default function Modeler({ color }) {
   };
 
   const updateModelPosition = (name, newPosition, newRotation) => {
-    const newModels = models.map((model) =>
-      model.name === name ? { ...model, position: newPosition, rotation: newRotation } : model
-    );
+    const group = groups.find(group => group.includes(name)) || [name];
+    const mainModel = models.find(model => model.name === name);
+  
+    const deltaX = newPosition[0] - mainModel.position[0];
+    const deltaY = newPosition[1] - mainModel.position[1];
+    const deltaZ = newPosition[2] - mainModel.position[2];
+  
+    const deltaRotX = newRotation[0] - mainModel.rotation[0];
+    const deltaRotY = newRotation[1] - mainModel.rotation[1];
+    const deltaRotZ = newRotation[2] - mainModel.rotation[2];
+  
+    const newModels = models.map((model) => {
+      if (group.includes(model.name)) {
+        return {
+          ...model,
+          position: [
+            model.position[0] + deltaX,
+            model.position[1] + deltaY,
+            model.position[2] + deltaZ,
+          ],
+          rotation: [
+            model.rotation[0] + deltaRotX,
+            model.rotation[1] + deltaRotY,
+            model.rotation[2] + deltaRotZ,
+          ],
+        };
+      }
+      return model;
+    });
+  
     setModels(newModels);
   };
+  
 
   const getEmptySpace = () => {
     if (models.length === 0) {
