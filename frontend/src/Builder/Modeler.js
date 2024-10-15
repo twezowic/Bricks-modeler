@@ -1,4 +1,3 @@
-import '.././App.css';
 import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Suspense } from 'react';
@@ -248,7 +247,7 @@ export default function Modeler({ color }) {
 
   return (
     <div
-    className="canvas"
+    className="float-right w-full h-[80vh]"
     onDrop={handleDrop}
     onDragOver={handleDragOver}
   >

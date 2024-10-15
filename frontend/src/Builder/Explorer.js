@@ -1,4 +1,3 @@
-import '.././App.css';
 import Part from './Part';
 import React, { useState, useEffect } from 'react';
 import { ip } from "../utils"
@@ -33,7 +32,7 @@ export default function Explorer({ setColorModel }) {
   }, [filterValue]);
 
   const partElements = parts.map((part, index) => (
-    <li key={part.name}>
+    <li key={part.name} className='mr-[10px]'>
       <Part
         imageUrl={part.imageUrl}
         name={part.name}
@@ -54,12 +53,14 @@ export default function Explorer({ setColorModel }) {
   
 
   return (
-    <div className='panel'>
-      <ul className='image-list'>
+    <div className='w-full h-full overflow-x-auto bg-white'>
+      <ul className='flex p-0 list-none py-[5px]'>
         {partElements}
       </ul>
+      <div className='flex items-center'>
       <input type="color" value={color} onChange={handleColorChange} />
       <input type="text" value={filterValue} onChange={handleFilterChange} />
+      </div>
     </div> 
   );
 }
