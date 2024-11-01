@@ -6,7 +6,7 @@ import Model from './Model';
 import Ground from './Ground';
 import Controls from './Controls';
 import { GizmoHelper, GizmoViewport } from '@react-three/drei';
-import { proxy } from 'valtio';
+import { proxy, useSnapshot } from 'valtio';
 import { ip } from "../utils"
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth0 } from '@auth0/auth0-react';
@@ -20,6 +20,7 @@ export default function Modeler({ color }) {
   const cameraRef = useRef(null);
   const glRef = useRef(null);
 
+  const snap = useSnapshot(state);
   const [groups, setGroups] = useState([]);
 
   const location = useLocation();
@@ -86,14 +87,14 @@ export default function Modeler({ color }) {
     event.preventDefault();
   };
 
-  const getConnection = async () => {
+  const getConnection = async (currentModels=models) => {
     try {
         const response = await fetch(`${ip}/connection`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'models': models })
+            body: JSON.stringify({ 'models': currentModels })
         });
 
         if (!response.ok) {
@@ -102,7 +103,6 @@ export default function Modeler({ color }) {
 
         const data = await response.json();
         setGroups(data);
-        console.log(data)
 
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -133,11 +133,13 @@ export default function Modeler({ color }) {
       rotation: [0, 0, 0],
       color: color
     };
-    setModels((prevModels) => [...prevModels, newModel]);
+    const newModels = [...models, newModel];
+    setModels(newModels);
+    await getConnection(newModels);
   };
 
   const updateModelPosition = (name, newPosition, newRotation) => {
-    const group = groups.find(group => group.includes(name)) || [name];
+    const group = snap.selected;
     const mainModel = models.find(model => model.name === name);
   
     const deltaX = newPosition[0] - mainModel.position[0];

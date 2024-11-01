@@ -3,8 +3,7 @@ import re
 from dataclasses import dataclass
 import numpy as np
 from pprint import pprint
-import csv
-from collections import Counter, defaultdict
+from collections import defaultdict
 from math import pi
 
 from database.mysqldb import get_part_description
@@ -122,24 +121,31 @@ def get_metadata(model_name):
     return minimum, maximum
 
 
-def check_connection(scene):
+def check_connection(models):
     points = []
-    for model in Model.from_json(scene):
+    for model in Model.from_json(models):
         connect = model.get_insertions()
         if connect is not None:
             points.append((model.name, connect))
     return points
 
 
-def find_connected_groups(scene):
+# TODO dodać w grupach wysokość do wyboru podgrupy przesunięcia
+def find_connected_groups(scene) -> list[tuple[str, int]]:
+    # lista model_name -> wszystkie możliwe połączenia
     models = check_connection(scene.models)
+    # słownik model_name -> pojedyńcze połączenie
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models:
+        down = np.min(coordinates[:, :, 2])
         for coord_set in coordinates.reshape(-1, coordinates.shape[-1]):
             key = tuple(coord_set)
-            coordinate_map[key].append(model_name)
+            coordinate_map[key].append((model_name, int(down)))
 
+    pprint(coordinate_map)
+
+    # model_name -> połączonego do niego modele
     graph = defaultdict(set)
 
     for models_with_same_coords in coordinate_map.values():
@@ -148,6 +154,9 @@ def find_connected_groups(scene):
                 graph[models_with_same_coords[i]].add(models_with_same_coords[j])
                 graph[models_with_same_coords[j]].add(models_with_same_coords[i])
 
+    pprint(graph)
+    # Depth first-search
+    # Do otrzymania grup połączeń
     def dfs(model, visited):
         stack = [model]
         group = []
@@ -169,10 +178,12 @@ def find_connected_groups(scene):
             group = dfs(model, visited)
             groups.append(group)
 
+    # dodaje modele nie połączone
     all_model_names = {model_name for model_name, _ in models}
-    unconnected_models = all_model_names - set(graph.keys())
-
+    unconnected_models = all_model_names - set(model for model, _ in graph.keys())
     for model in unconnected_models:
-        groups.append([model])
+        groups.append([(model, 0)])
+
+    print(groups)
 
     return groups

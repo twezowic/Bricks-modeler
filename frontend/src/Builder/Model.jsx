@@ -32,23 +32,45 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
     }
   });
 
+
+
   function metadataEqual(meta1, meta2) {
     return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
+  }
+
+
+  function findHeight(modelName) {
+    for (const group of groups) {
+        const height = group.find(([name]) => name === modelName);
+        if (height) return height[1];
+      }
+  }
+
+  function getModelsHigherThan(group, minHeight) {
+    var result = [];
+    for (const [model, height] of group) {
+      if (height >= minHeight) {
+        result.push(model)
+      }
+    }
+    return result;
   }
 
   function handleClick(e) {
     e.stopPropagation();
 
-    var found = false;
-    
-    groups.forEach(group => {
-      if (group.includes(name)){
-        state.selected = group;
-        found = true;
+    for (const group of groups) {
+      const groupModels = group.map((model)=>(model[0]))
+      if (groupModels.includes(name)){
+        if (snap.selected.length !== 1 && snap.selected.includes(name)) { 
+          const selectedHeight = findHeight(name);
+          state.selected = [name].concat(getModelsHigherThan(group, selectedHeight));
+        }
+        else {
+          state.selected = groupModels;
+        }
+        break;
       }
-    });
-    if (!found) {
-      state.selected = [name]
     }
   }
 
@@ -57,7 +79,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       ref={ref}
       onClick={handleClick}
       onPointerMissed={(e) => e.type === 'click' && (state.selected = [])}
-      onContextMenu={(e) => snap.current === name && (e.stopPropagation(), (state.mode = (snap.mode + 1) % modes.length))}
+      onContextMenu={(e) => snap.selected.includes(name) && (e.stopPropagation(), (state.mode = (snap.mode + 1) % modes.length))}
       onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
       onPointerOut={(e) => setHovered(false)}
       name={name}
