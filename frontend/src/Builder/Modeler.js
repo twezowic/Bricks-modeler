@@ -26,13 +26,19 @@ export default function Modeler({ color }) {
 
   const { user, isAuthenticated } = useAuth0();
 
+  // Logika wczytywania z loadera
   useEffect(() => {
-    if (location.state?.models) {
-      setModels(location.state.models);
-    } else {
-      setModels([]);
-    }
-  }, [])
+    const loadHistory = async () => {
+      if (location.state?.models) {
+        setModels(location.state.models);
+        await getConnection(location.state.models)
+      } else {
+        setModels([]);
+      }
+    };
+    loadHistory();
+  }, []);
+  
 
   useEffect(() => {
     prevModelsRef.current = models;
