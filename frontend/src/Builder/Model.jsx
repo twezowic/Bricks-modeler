@@ -7,7 +7,7 @@ import { ip } from '../utils';
 
 const modes = ['translate', 'rotate'];
 
-export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, groups, ...props }) {
+export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, groups, currentlyMoving, ...props }) {
   const snap = useSnapshot(state);
   const [hovered, setHovered] = useState(false);
   const { nodes } = useGLTF(`${ip}/model/${gltfPath}`);
@@ -49,7 +49,7 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
   function getModelsHigherThan(group, minHeight) {
     var result = [];
     for (const [model, height] of group) {
-      if (height >= minHeight) {
+      if (height > minHeight) {
         result.push(model)
       }
     }
@@ -58,18 +58,20 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
 
   function handleClick(e) {
     e.stopPropagation();
-
-    for (const group of groups) {
-      const groupModels = group.map((model)=>(model[0]))
-      if (groupModels.includes(name)){
-        if (snap.selected.length !== 1 && snap.selected.includes(name)) { 
-          const selectedHeight = findHeight(name);
-          state.selected = [name].concat(getModelsHigherThan(group, selectedHeight));
+    console.log("model", currentlyMoving)
+    if (!currentlyMoving) {
+      for (const group of groups) {
+        const groupModels = group.map((model)=>(model[0]))
+        if (groupModels.includes(name)){
+          if (snap.selected.length !== 1 && snap.selected.includes(name)) { 
+            const selectedHeight = findHeight(name);
+            state.selected = [name].concat(getModelsHigherThan(group, selectedHeight));
+          }
+          else {
+            state.selected = groupModels;
+          }
+          break;
         }
-        else {
-          state.selected = groupModels;
-        }
-        break;
       }
     }
   }

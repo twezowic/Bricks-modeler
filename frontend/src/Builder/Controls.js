@@ -9,7 +9,7 @@ const step = 10;
 const vertical = 8;
 const rotationStep = Math.PI / 2;
 
-export default function Controls({ state, getConnection }) {
+export default function Controls({ state, getConnection, setCurrentlyMoving }) {
   const snap = useSnapshot(state);
   const { scene, camera, gl } = useThree();
   const transformControls = useRef();
@@ -43,6 +43,7 @@ export default function Controls({ state, getConnection }) {
 
     if (controls) {
       const onChange = () => {
+        setCurrentlyMoving(true);
         const mainObject = controls.object;
 
         const deltaX = mainObject.position.x - initialTransforms.current[mainObject.name].position.x;
@@ -80,6 +81,7 @@ export default function Controls({ state, getConnection }) {
           console.error("Error fetching groups:", error);
         } finally {
           setMovingDisabled(false);
+          setCurrentlyMoving(false);
         }
       };
 

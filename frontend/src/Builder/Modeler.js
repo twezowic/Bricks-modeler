@@ -20,6 +20,8 @@ export default function Modeler({ color }) {
   const cameraRef = useRef(null);
   const glRef = useRef(null);
 
+  const [currentlyMoving, setCurrentlyMoving] = useState(false);
+
   const snap = useSnapshot(state);
   const [groups, setGroups] = useState([]);
 
@@ -279,13 +281,14 @@ export default function Modeler({ color }) {
                 color={model.color}
                 onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
                 groups={groups}
+                currentlyMoving={currentlyMoving}
               />
             ))}
 
           </group>
           <Ground />
         </Suspense>
-        <Controls state={state} getConnection={getConnection}/>
+        <Controls state={state} getConnection={getConnection} setCurrentlyMoving={setCurrentlyMoving}/>
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport axisColors={['#9d4b4b', '#2f7f4f', '#3b5b9d']} labelColor="white" />
         </GizmoHelper>
