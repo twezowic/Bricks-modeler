@@ -12,6 +12,9 @@ models = db['Models']
 tracks = db['Tracks']
 sets = db['Sets']
 reviews = db['Reviews']
+instruction_steps = db['Instruction_steps']
+instruction_models = db['Instruction_models']
+
 
 models2 = db['Models_v2']
 tracks2 = db['Tracks_v2']
@@ -136,6 +139,27 @@ def add_review(set_id, comment: str, rating: int, user_id=None):
 def get_reviews_for_set(set_id=None):               # JOIN na tabeli użytkownika jak będę miał
     result = reviews.find({'set_id': set_id}, {'comment': 1, 'rating': 1, 'user_id': 1})
     return result
+
+
+# połączenie z instruction_models
+def add_instruction_step(set_id, step_number, up_mask, up_model_id, down_mask, down_model_id):
+    model_document = {
+        'set_id': set_id,
+        'step': step_number,
+        'up_mask': up_mask,
+        'up_model_id': up_model_id,
+        'down_mask': down_mask,
+        'down_model_id': down_model_id
+    }
+    instruction_steps.insert_one(model_document)
+
+
+def add_instruction_model(model):
+    model_document = {
+        'name': model.name,
+        'color': model.color
+    }
+    instruction_models.insert_one(model_document)
 
 
 if __name__ == "__main__":
