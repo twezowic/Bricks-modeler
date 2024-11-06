@@ -1,5 +1,7 @@
+import datetime
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+import os
 import numpy as np
 from pprint import pprint
 from collections import defaultdict
@@ -86,9 +88,6 @@ class Model:
         for model in scene:
             model_name = model['gltfPath']
             minimum, maximum = get_metadata(model_name)
-            print(minimum)
-            print(maximum)
-            print()
             height = (maximum[2] - minimum[2]) // HEIGHT
             size = [floor(abs(minimum[1] - maximum[1])/LENGTH), floor(abs(minimum[0] - maximum[0])/LENGTH)]
             models.append(Model(model['name'], model['position'], minimum, maximum, model['rotation'], size, height))
@@ -117,24 +116,40 @@ class ModelDB:
     name: str
 
     @staticmethod
-    def from_scene(scene, model_id):
-        print(scene.models)
-        color, name = next((model['gltfPath'], model['color']) for model in scene.models if model['name'] == model_id)
-        return ModelDB(model_id, color, name)
+    def from_scene(scene,):
+        result = []
+        for model in scene:
+            result.append(ModelDB(model['name'],  model['color'], (model['gltfPath'])))
+        return result
+    
+    def __eq__(self, value: 'ModelDB'):
+        return all([
+            self.color == value.color,
+            self.name == value.name
+        ])
     
 
 @dataclass
 class StepDB:
-    step_id: int
-    mask_up: str
+    up_mask: str
     up_id: str
-    mask_down: str
+    down_mask: str
     down_id: str
-    # instruction_step
+
+    def __eq__(self, value: 'StepDB'):
+        return all([
+            self.up_mask == value.up_mask,
+            self.up_id == value.up_id,
+            self.down_mask == value.down_mask,
+            self.down_id == value.down_id,
+        ])
+    
+    def __hash__(self):
+        return hash((self.up_mask, self.up_id, self.down_mask, self.down_id))
 
 
 def get_masks(coords1, coords2):
-    # symetrie sprawdzać przez np.rot90(a, n= 1 | 2 | 3 )
+    # symetrie sprawdzać przez np.rot90(a, n= 1 | 2 | 3 ) to chyba i tak w sprawdzaniu?
     maska1 = np.zeros(coords1.shape[:2], dtype=bool)
     maska2 = np.zeros(coords2.shape[:2], dtype=bool)
 
@@ -156,9 +171,60 @@ def get_masks(coords1, coords2):
 
     return maska1, maska2
 
+
+def temp_prepare_steps(scene):
+    models = check_connection(scene.models if not isinstance(scene, list) else scene )
+
+    coordinate_map = defaultdict(list)
+
+    for model_name, coordinates in models.items():
+        down = np.min(coordinates[:, :, :, 2])
+        for coord_set in coordinates.reshape(-1, 3):
+            key = tuple(coord_set)
+            coordinate_map[key].append((model_name, int(down)))
+
+    graph = defaultdict(set)
+
+    for models_with_same_coords in coordinate_map.values():
+        for i in range(len(models_with_same_coords)):
+            for j in range(i + 1, len(models_with_same_coords)):
+                graph[models_with_same_coords[i]].add(models_with_same_coords[j])
+                graph[models_with_same_coords[j]].add(models_with_same_coords[i])
+
+    instruction_steps = []
+    for key, values in graph.items():
+        height = key[1]
+        for model_name, model_height in values:
+            if model_height > height:
+                maska1, maska2 = get_masks(models[key[0]][1], models[model_name][0])
+
+                # pprint(maska1)
+                flatten_mask_1 = ''.join(maska1.astype(int).astype(str).flatten())
+                # pprint(flatten_mask_1)
+                # print()
+
+                # pprint(maska2)
+                flatten_mask_2 = ''.join(maska2.astype(int).astype(str).flatten())
+                # pprint(flatten_mask_2)
+                # print()
+
+                instruction_steps.append(StepDB(flatten_mask_1, key[0], flatten_mask_2, model_name))
+
+    # pprint(instruction_steps)
+
+    # filepath = os.path.join("database/instruction_temp", str(datetime.datetime.now()))
+    # with open(filepath, "w") as file:
+    #     data = {
+    #         "instruction_models": [asdict(item) for item in ModelDB.from_scene(scene)],
+    #         "instruction_steps":  [asdict(item) for item in instruction_steps]
+    #     }
+    #     json.dump(data, file, indent=4)
+
+    return ModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_steps
+
+
 def find_connected_groups(scene) -> list[tuple[str, int]]:
 
-    pprint(scene)
     # dict model_name -> wszystkie możliwe połączenia
     models = check_connection(scene.models)
 
@@ -185,29 +251,6 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
                 graph[models_with_same_coords[j]].add(models_with_same_coords[i])
 
     pprint(graph)
-
-    instruction_steps = []
-    instruction_models = []
-    for key, values in graph.items():
-        height = key[1]
-        for model_name, model_height in values:
-            if model_height > height:
-                maska1, maska2 = get_masks(models[key[0]][1], models[model_name][0])
-
-                pprint(maska1)
-                flatten_mask_1 = ''.join(maska1.astype(int).astype(str).flatten())
-                pprint(flatten_mask_1)
-                print()
-
-                pprint(maska2)
-                flatten_mask_2 = ''.join(maska2.astype(int).astype(str).flatten())
-                pprint(flatten_mask_2)
-                print()
-
-                instruction_models.append(ModelDB.from_scene(scene, key[0]))
-                instruction_steps.append((flatten_mask_1, flatten_mask_2, key[0], model_name))
-    pprint(instruction_models)
-    pprint(instruction_steps)
             
     # Depth first-search
     # Do otrzymania grup połączeń

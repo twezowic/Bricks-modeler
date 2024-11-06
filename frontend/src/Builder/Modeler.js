@@ -54,10 +54,13 @@ export default function Modeler({ color }) {
         saveScene();
       } else if (event.key === '\\') {
         // loadScene();
+        saveInstructionSteps()
       } else if (event.key === 'Delete') {
         const newModels = models.filter(model => !state.selected.includes(model.name));
         setModels(newModels);
         state.selected = [];
+      } else if (event.key === "k") {
+        checkInstruction();
       }
     };
 
@@ -83,6 +86,49 @@ export default function Modeler({ color }) {
       console.error(error);
     }
   };
+
+  const saveInstructionSteps = async () => {
+    try {
+      const response = await fetch(`${ip}/prepare_instruction`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 'models': models })
+      });
+
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+  } catch (error) {
+      console.error('Error fetching data:', error);
+  }
+  }
+
+  const checkInstruction = async () => {
+    const set_id = 0;
+    const step = 1;
+    try {
+        const response = await fetch(`${ip}/instruction/check`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'set_id': set_id, 'step': step, 'models': models })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log(data)
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+};
   
   
   const handleDragOver = (event) => {

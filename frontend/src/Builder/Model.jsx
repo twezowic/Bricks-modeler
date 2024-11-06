@@ -58,7 +58,6 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
 
   function handleClick(e) {
     e.stopPropagation();
-    console.log("model", currentlyMoving)
     if (!currentlyMoving) {
       for (const group of groups) {
         const groupModels = group.map((model)=>(model[0]))

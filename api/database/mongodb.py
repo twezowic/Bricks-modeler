@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import json
 from math import ceil
 from pprint import pprint
@@ -12,6 +13,7 @@ models = db['Models']
 tracks = db['Tracks']
 sets = db['Sets']
 reviews = db['Reviews']
+
 instruction_steps = db['Instruction_steps']
 instruction_models = db['Instruction_models']
 
@@ -141,8 +143,8 @@ def get_reviews_for_set(set_id=None):               # JOIN na tabeli użytkownik
     return result
 
 
-# połączenie z instruction_models
-def add_instruction_step(set_id, step_number, up_mask, up_model_id, down_mask, down_model_id):
+# połączenie z instruction_models oraz sets później
+def add_instruction_step(up_mask, up_model_id, down_mask, down_model_id, set_id=0, step_number=1):
     model_document = {
         'set_id': set_id,
         'step': step_number,
@@ -153,13 +155,50 @@ def add_instruction_step(set_id, step_number, up_mask, up_model_id, down_mask, d
     }
     instruction_steps.insert_one(model_document)
 
-
 def add_instruction_model(model):
     model_document = {
+        'model_id': model.model_id,
         'name': model.name,
         'color': model.color
     }
     instruction_models.insert_one(model_document)
+
+@dataclass
+class StepDB:
+    up_mask: str
+    up_id: str
+    down_mask: str
+    down_id: str
+
+
+def temp_add_whole_instruction(steps: list[StepDB], models):
+    for step in steps:
+        add_instruction_step(step.up_mask, step.up_id, step.down_mask, step.down_id)
+    for model in models:
+        add_instruction_model(model)
+
+
+def get_current_steps(set_id=0, step=1):
+    steps = instruction_steps.find({'set_id': set_id, 'step': {'$lte': step}},
+                                   {'up_mask': 1, 'up_model_id': 1, 'down_mask': 1, "down_model_id": 1})
+    unique_model_ids = set()
+    steps_list = []
+    for step in steps:
+        print(step)
+        unique_model_ids.add(step['up_model_id'])
+        unique_model_ids.add(step['down_model_id'])
+
+        step['_id'] = str(step['_id'])
+        steps_list.append(step)
+
+    models = instruction_models.find({'model_id': {'$in': list(unique_model_ids)}},
+                                     {'model_id': 1, 'name': 1, 'color': 1})
+    models_list = []
+    for document in models:
+        document['_id'] = str(document['_id'])
+        models_list.append(document)
+
+    return models_list, steps_list
 
 
 if __name__ == "__main__":
