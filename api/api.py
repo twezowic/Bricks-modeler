@@ -2,11 +2,12 @@ from pprint import pprint
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-import database.mysqldb as mysqldb
 import database.mongodb as mongodb
-from database.connection import ModelDB, StepDB, find_connected_groups, temp_prepare_steps
+from database.connection import ModelDB, \
+    StepDB, find_connected_groups, temp_prepare_steps
 import json
 import networkx as nx
+from collections import Counter
 
 app = FastAPI()
 
@@ -20,14 +21,18 @@ app.add_middleware(
 
 
 @app.get('/parts')
-async def get_thumbnails(filter: str = Query(None)):
-    thumbnails = mysqldb.get_filtered_parts(filter) if filter else mysqldb.get_parts_thumbnail()
-    result = [{'imageUrl': t[2], 'name': t[0]} for t in thumbnails][:18]
-    return result
+async def get_thumbnails(filter: str = Query(None),
+                         category: str = Query(None),
+                         size: str = Query(None)):
+    size = [int(x) for x in size.split(',')]
+    thumbnails = mongodb.get_thumbnails_v2(filter, category, size, 17)
+    print(len(thumbnails))
+    return thumbnails
+
 
 @app.get('/model/{id}')
 async def get_model(id: str):
-    result = mongodb.get_model(id)
+    result = mongodb.get_models_v2(id)
     if result:
         return json.loads(result)
     else:
@@ -51,7 +56,7 @@ async def prepare_instruction(models: Scene):
     mongodb.temp_add_whole_instruction(steps, db_models)
 
 
-class InstructionCheck(BaseModel):
+class Instruction(BaseModel):
     set_id: int
     step: int
     models: list
@@ -64,7 +69,7 @@ def _prepare_edges(steps: list[StepDB]):
     return edges
 
 @app.post("/instruction/check")
-def compare_instruction_files(instruction_steps: InstructionCheck):
+def compare_instruction_files(instruction_steps: Instruction):
     current_models, current_steps = temp_prepare_steps(instruction_steps.models)
     instruction_models, instruction_steps = mongodb.get_current_steps(instruction_steps.set_id, instruction_steps.step)
 
@@ -77,13 +82,13 @@ def compare_instruction_files(instruction_steps: InstructionCheck):
     models1 = {model.model_id: model for model in instruction_db_models}
     models2 = {model.model_id: model for model in current_models}
 
-    # print(current_models)
-    # print()
-    # print(current_steps)
-    # print()
-    # print(instruction_models)
-    # print()
-    # print(instruction_steps)
+    pprint(current_models)
+    print()
+    pprint(current_steps)
+    print()
+    pprint(instruction_db_models)
+    print()
+    pprint(instruction_db_steps)
 
     G1 = nx.DiGraph()
     edges1 = _prepare_edges(instruction_db_steps)
@@ -154,5 +159,18 @@ async def get_track(track_id: str):
     else:
         raise HTTPException(status_code=404, detail="Track not found")
 
+
+class SetSteps(BaseModel):
+    set_id: int
+    step: int
+
+
+@app.get("/instruction/models/{set_id}")
+async def get_instruction_models(set_id: int, step: int = Query(None)):
+    models, _ = mongodb.get_current_steps(set_id, step)
+    c = Counter((model['name'], model['color']) for model in models)
+
+    # TODO after database migration return url of brick
+    return [{"name": model[0], "color": model[1], "count": count} for model, count in c.items()]
 
 # uvicorn api:app --reload

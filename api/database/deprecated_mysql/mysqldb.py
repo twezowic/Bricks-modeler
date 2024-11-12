@@ -116,7 +116,7 @@ def get_filtered_parts(filter_value):
                 LEFT JOIN INVENTORY_PARTS i ON p.part_num = i.part_num
                 WHERE i.img_url IS NOT NULL AND p.name LIKE %s
                 GROUP BY p.part_num, p.name
-                LIMIT 15;
+                LIMIT 50;
             """
             cursor.execute(query, ('%' + filter_value + '%',))
 
@@ -129,16 +129,3 @@ def get_filtered_parts(filter_value):
 
     finally:
         connection.close()
-
-
-# res = []
-# for a, b, c in get_parts_thumbnail():
-#     if c is None:
-#         print('a')
-
-# import pandas as pd
-
-# inventory = pd.read_csv('database/parts/inventory_parts.csv')
-# filtered_inventory = inventory[inventory['part_num'].isin(res)]
-# first_occurrences = filtered_inventory.groupby('part_num').first().reset_index()
-# first_occurrences.to_csv('database/filtered_parts/thumbnail.csv', index=False)
