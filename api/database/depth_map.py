@@ -53,7 +53,7 @@ def is_circle(contour):
 
     return (
         0.9 <= aspect_ratio <= 1.1
-        and radius > 3 and radius < 8
+        and radius > 20 and radius < 40
     )
 
 
@@ -83,6 +83,8 @@ def depth_map_from_faces(file_num: int, a=None, b=None):
 
     # tworzenie odpowiedniego rozmiaru mapy
     width, height = size
+    width *= 4
+    height *= 4
     depth_map = np.full((height, width), -np.inf)
 
     # znormalizowanie vertexów na mapę
@@ -138,37 +140,32 @@ def depth_map_from_faces(file_num: int, a=None, b=None):
     for contour in contours:
 
         if is_circle(contour):
+            # (x, y), _ = cv2.minEnclosingCircle(contour) 
             cv2.drawContours(output_image, [contour],
                                             -1, (0, 0, 255), 1)
             counter += 1
         else: 
              cv2.drawContours(output_image, [contour],
                                             -1, (0, 255, 0), 1)
-        # print(f"""
-        # Area: {area}
-        # Perimieter: {cv2.arcLength(contour,True)}
-        # W/h: {w}, {h}
-        # Radius: {radius}
-        # """)
 
     # insets_coordinates = []
-    # # half_length = 10
-    # # # wyznaczanie wypustek
-    # # for x in range(0, int(width / half_length)-1):
-    # #     for y in range(0, int(height / half_length)-1):
-    # #         # print(x, y)
-    # #         top_left_x = x * half_length
-    # #         top_left_y = y * half_length
+    # half_length = 10
+    # # wyznaczanie wypustek
+    # for x in range(0, int(width / half_length)-1):
+    #     for y in range(0, int(height / half_length)-1):
+    #         # print(x, y)
+    #         top_left_x = x * half_length
+    #         top_left_y = y * half_length
             
-    # #         bottom_right_x = top_left_x + LENGTH
-    # #         bottom_right_y = top_left_y + LENGTH
+    #         bottom_right_x = top_left_x + LENGTH
+    #         bottom_right_y = top_left_y + LENGTH
             
-    # #         square = binary_image[
-    # #             top_left_y:bottom_right_y,
-    # #             top_left_x:bottom_right_x
-    # #         ]
+    #         square = gradient_magnitude_normalized[
+    #             top_left_y:bottom_right_y,
+    #             top_left_x:bottom_right_x
+    #         ]
 
-    # # # # np.savetxt(f'depth_map_{file_num}.csv', depth_map_normalized, fmt='%d')
+    # np.savetxt(f'depth_map/{file_num}.csv', depth_map_normalized, fmt='%d')
     # print(f"{file_num}: {insets_coordinates} {counter}")
     cv2.imwrite(f'depth_map/faces/x/{file_num}.png', output_image)
 
@@ -189,7 +186,7 @@ def generate(n=1543):
         
 
 generate(200)
-# depth_map_from_faces("18975")
+# depth_map_from_faces("2341")
 
 # na razie element: 15573 nie będzie działał poprawnie
 # jak rozwiązać że środek tak naprawde to 4 punkty -> jak było do tej pory?
