@@ -46,14 +46,12 @@ def calculate_z(x, y, A, B, C):
 def is_circle(contour):
     (x, y), radius = cv2.minEnclosingCircle(contour)
     x, y, w, h = cv2.boundingRect(contour)
-
-    radius > 3 and radius < 8
-
+    
     aspect_ratio = w / h
 
     return (
-        0.9 <= aspect_ratio <= 1.1
-        and radius > 20 and radius < 40
+        0.8 <= aspect_ratio <= 1.2 and
+        20 <= radius <= 40
     )
 
 
@@ -64,8 +62,8 @@ def get_size(file_name: str):
         model = json.loads(fh.read())
         minimum = model['accessors'][0]['min']
         maximum = model['accessors'][0]['max']
-        size = [ceil(abs(floor(minimum[0]) - floor(maximum[0]))/LENGTH)*20,
-                ceil(abs(floor(minimum[1]) - floor(maximum[1]))/LENGTH)*20]
+        size = [ceil(abs(floor(minimum[0]) - floor(maximum[0]))),
+                ceil(abs(floor(minimum[1]) - floor(maximum[1])))]
     return size
 
 
@@ -185,8 +183,7 @@ def generate(n=1543):
                 break
         
 
-generate(200)
-# depth_map_from_faces("2341")
+# generate(200)
+depth_map_from_faces("24201")
 
-# na razie element: 15573 nie będzie działał poprawnie
 # jak rozwiązać że środek tak naprawde to 4 punkty -> jak było do tej pory?
