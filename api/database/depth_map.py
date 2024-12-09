@@ -1,7 +1,6 @@
 import csv
 import json
 from math import ceil, floor
-import random
 import numpy as np
 import cv2
 from rich.progress import track
@@ -44,16 +43,15 @@ def calculate_z(x, y, A, B, C):
 
 
 def is_circle(contour):
-    (x, y), radius = cv2.minEnclosingCircle(contour)
-    x, y, w, h = cv2.boundingRect(contour)
-    
+    _, radius = cv2.minEnclosingCircle(contour)
+    _, _, w, h = cv2.boundingRect(contour)
+
     aspect_ratio = w / h
 
     return (
         0.8 <= aspect_ratio <= 1.2 and
         20 <= radius <= 40
     )
-
 
 
 # później brane z bazy danych ma być tylko min i max bo tutaj inaczej zaokrąglam ceil zamiast floor
@@ -63,11 +61,13 @@ def get_size(file_name: str):
         minimum = model['accessors'][0]['min']
         maximum = model['accessors'][0]['max']
         size = [ceil(abs(floor(minimum[0]) - floor(maximum[0]))),
-                ceil(abs(floor(minimum[1]) - floor(maximum[1])))]
+                ceil(abs(floor(minimum[1]) - floor(maximum[1]))),
+                ceil(abs(floor(minimum[2]) - floor(maximum[2]))),
+                ]
     return size
 
 
-def depth_map_from_faces(file_num: int, a=None, b=None):
+def depth_map_from_faces(file_num: int, generate_images=False):
     file_name = f'./api/database/gltf/{file_num}.gltf'
 
     size = get_size(file_name)
@@ -79,8 +79,8 @@ def depth_map_from_faces(file_num: int, a=None, b=None):
     vertices = np.array(mesh.geometry[f'{file_num}-Mesh'].vertices)
     faces = np.array(mesh.geometry[f'{file_num}-Mesh'].faces)
 
-    # tworzenie odpowiedniego rozmiaru mapy
-    width, height = size
+    # tworzenie odpowiedniego rozmiaru mapy i skalowanie aby zachować więcej szczegółów
+    width, height, z_value = size
     width *= 4
     height *= 4
     depth_map = np.full((height, width), -np.inf)
@@ -93,7 +93,6 @@ def depth_map_from_faces(file_num: int, a=None, b=None):
 
     vertices[:, 0] = width * vertices[:, 0] - 1
     vertices[:, 1] = height - 1 - (height * vertices[:, 1])  # sprawdzić czy na pewno w bazie też jest odwrócone
-
 
     # wypełnienie depth mapy
     for face in faces:
@@ -125,53 +124,36 @@ def depth_map_from_faces(file_num: int, a=None, b=None):
 
     gradient_magnitude_normalized = cv2.normalize(gradient_magnitude, None, 0, 255, cv2.NORM_MINMAX)
     gradient_magnitude_normalized = gradient_magnitude_normalized.astype(np.uint8)
-    
 
+    # do usunięcia
     # _, binary_image = cv2.threshold(gradient_magnitude_normalized, 100, 255, cv2.THRESH_BINARY)
     # binary_image = cv2.Canny(gradient_magnitude_normalized, 50, 150)
 
-    output_image = cv2.cvtColor(depth_map_normalized.astype(np.uint8), cv2.COLOR_GRAY2BGR)
-    
-    counter = 0
+    if generate_images: 
+        output_image = cv2.cvtColor(depth_map_normalized.astype(np.uint8), cv2.COLOR_GRAY2BGR)
+
+    insets = set()
+
     # wyznaczanie krawędzi
-    contours, _ = cv2.findContours(gradient_magnitude_normalized, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(gradient_magnitude_normalized,
+                                   cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
 
         if is_circle(contour):
-            # (x, y), _ = cv2.minEnclosingCircle(contour) 
+            (x, y), _ = cv2.minEnclosingCircle(contour) 
+            if generate_images:
+                cv2.drawContours(output_image, [contour],
+                                 -1, (0, 0, 255), 1)
+            insets.add((floor(x/40), floor(y/40),
+                        (ceil(depth_map[int(y), int(x)] * z_value)-4) // 8
+                        ))
+
+        elif generate_images:
             cv2.drawContours(output_image, [contour],
-                                            -1, (0, 0, 255), 1)
-            counter += 1
-        else: 
-             cv2.drawContours(output_image, [contour],
-                                            -1, (0, 255, 0), 1)
-
-    # insets_coordinates = []
-    # half_length = 10
-    # # wyznaczanie wypustek
-    # for x in range(0, int(width / half_length)-1):
-    #     for y in range(0, int(height / half_length)-1):
-    #         # print(x, y)
-    #         top_left_x = x * half_length
-    #         top_left_y = y * half_length
-            
-    #         bottom_right_x = top_left_x + LENGTH
-    #         bottom_right_y = top_left_y + LENGTH
-            
-    #         square = gradient_magnitude_normalized[
-    #             top_left_y:bottom_right_y,
-    #             top_left_x:bottom_right_x
-    #         ]
-
-    # np.savetxt(f'depth_map/{file_num}.csv', depth_map_normalized, fmt='%d')
-    # print(f"{file_num}: {insets_coordinates} {counter}")
-    cv2.imwrite(f'depth_map/faces/x/{file_num}.png', output_image)
-
-
-
-
-# for a in range(-10, 10):
-#     depth_map_from_faces(file_num, a)
+                             -1, (0, 255, 0), 1)
+    if generate_images:
+        cv2.imwrite(f'depth_map/faces/x/{file_num}.png', output_image)
+    print(sorted(insets))
 
 
 def generate(n=1543):
@@ -181,9 +163,10 @@ def generate(n=1543):
             depth_map_from_faces(row['part_num'])
             if index == n:
                 break
-        
 
-# generate(200)
-depth_map_from_faces("24201")
 
-# jak rozwiązać że środek tak naprawde to 4 punkty -> jak było do tej pory?
+# generate(15)
+depth_map_from_faces("26599")
+
+
+# todo wybrać jakieś podstawowe i przetestować czy to działa na różnych 10 elementach
