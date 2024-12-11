@@ -1,20 +1,31 @@
-import datetime
 import json
-from dataclasses import asdict, dataclass
-import os
+from dataclasses import dataclass
 import numpy as np
 from pprint import pprint
 from collections import defaultdict
-from math import floor
+from math import ceil, floor
+import csv
 
 from database.mongodb import get_model
 
 LENGTH = 20
 HEIGHT = 8
 
+
+def load_depth_map_csv(path):
+    result = []
+    with open(path, 'r') as fh:
+        reader = csv.reader(fh)
+        for row in reader:
+            mapped = np.array((int(row[0]), int(row[1]), int(row[2])))
+            result.append(mapped)
+    return result
+
+
 @dataclass
 class Model:
     name: str
+    gltf: str
     middle: list
     minimum: list
     maximum: list
@@ -22,26 +33,32 @@ class Model:
     size: list
     height: int
 
-    def get_insertions(self):       # bierze środek
-        result_bottom = np.zeros(tuple(self.size) + (3,), dtype=int)
+    def get_insertions(self):
+        # zamienić potem na wczytywanie z self
         half_x = self.size[0] / 2
         half_y = self.size[1] / 2
+        half_z = self.height / 2
+        offset = np.array(
+            [self.middle[0]+self.minimum[0], self.middle[1]+self.minimum[1], self.middle[2]+self.minimum[2]]
+        )
 
-        bottom = self.middle[2] + self.minimum[2]
-        top = bottom + self.height * HEIGHT
-        result_bottom[:, :, 2] = bottom
+        depth_map = load_depth_map_csv(f"../depth_map/csv/{self.gltf}_top.csv")
+        result_top = [
+            point+offset for point in depth_map
+        ]
 
-        for i in range(self.size[1]):
-            for j in range(self.size[0]):
-                result_bottom[j, i, 1] = int(self.middle[1] - 20 * half_x + j * 20+10)
-                result_bottom[j, i, 0] = int(self.middle[0] - 20 * half_y + i * 20+10)
-        result_top = np.copy(result_bottom)
-        result_top[:, :, 2] = top
-        result = np.stack([result_bottom, result_top])
-        result = self.apply_rotation(result)
+        depth_map = load_depth_map_csv(f"../depth_map/csv/{self.gltf}_bot.csv")
+        result_bot = [
+            point+offset for point in depth_map
+        ]
 
-        return result
+        result_top_array = np.array(result_top)
+        result_bot_array = np.array(result_bot)
 
+        result_top_array = self.apply_rotation(result_top_array)
+        result_bot_array = self.apply_rotation(result_bot_array)
+
+        return result_bot_array, result_top_array
 
     def get_rotation_matrix(self):
         angles = self.rotation
@@ -89,9 +106,10 @@ class Model:
             model_name = model['gltfPath']
             minimum, maximum = get_metadata(model_name)
             height = (maximum[2] - minimum[2]) // HEIGHT
-            size = [floor(abs(minimum[1] - maximum[1])/LENGTH), floor(abs(minimum[0] - maximum[0])/LENGTH)]
-            models.append(Model(model['name'], model['position'], minimum, maximum, model['rotation'], size, height))
+            size = [ceil(abs(minimum[1] - maximum[1])/LENGTH), ceil(abs(minimum[0] - maximum[0])/LENGTH)]
+            models.append(Model(model['name'], model['gltfPath'], model['position'], minimum, maximum, model['rotation'], size, height))
         return models
+
 
 def get_metadata(model_name):
     model = json.loads(get_model(model_name))
@@ -103,9 +121,9 @@ def get_metadata(model_name):
 def check_connection(models) -> dict[str, list]:
     points = defaultdict(list)
     for model in Model.from_json(models):
-        connect = model.get_insertions()
-        if connect is not None:
-            points[model.name] = connect
+        bot, top = model.get_insertions()
+        if bot is not None or top is not None:
+            points[model.name] = [bot, top]
     return points
 
 
@@ -178,7 +196,14 @@ def temp_prepare_steps(scene):
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models.items():
-        down = np.min(coordinates[:, :, :, 2])
+        # temp
+        if len(coordinates[0]) and len(coordinates[1]):
+            coordinates = np.concatenate((coordinates[0], coordinates[1]))
+        elif not len(coordinates[1]):
+            coordinates = coordinates[0]
+        else:
+            coordinates = coordinates[1]
+        down = np.min(coordinates[:, 2])
         for coord_set in coordinates.reshape(-1, 3):
             key = tuple(coord_set)
             coordinate_map[key].append((model_name, int(down)))
@@ -234,7 +259,13 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models.items():
-        down = np.min(coordinates[:, :, :, 2])
+        if len(coordinates[0]) and len(coordinates[1]):
+            coordinates = np.concatenate((coordinates[0], coordinates[1]))
+        elif not len(coordinates[1]):
+            coordinates = coordinates[0]
+        else:
+            coordinates = coordinates[1]
+        down = np.min(coordinates[:, 2])
         for coord_set in coordinates.reshape(-1, 3):
             key = tuple(coord_set)
             coordinate_map[key].append((model_name, int(down)))
@@ -284,3 +315,16 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
     print(groups)
 
     return groups
+
+
+def connection_for_api(scene) -> dict:
+    points = check_connection(scene.models)
+
+    result = []
+    for _, point in points.items():
+        for x in point[0].reshape(-1, 3).tolist():
+            result.append({'point': x, 'color': 'blue'})
+        for x in point[1].reshape(-1, 3).tolist():
+            result.append({'point': x, 'color': 'blue'})
+
+    return result
