@@ -201,12 +201,11 @@ def depth_map_top(file_num: int, generate_images=False):
 
     gradient_magnitude_normalized = cv2.normalize(gradient_magnitude, None, 0, 255, cv2.NORM_MINMAX)
     gradient_magnitude_normalized = gradient_magnitude_normalized.astype(np.uint8)
-depth_map_top
     # do usunięcia
     # _, binary_image = cv2.threshold(gradient_magnitude_normalized, 100, 255, cv2.THRESH_BINARY)
     # binary_image = cv2.Canny(gradient_magnitude_normalized, 50, 150)
 
-    if generate_images: 
+    if generate_images:
         output_image = cv2.cvtColor(depth_map_normalized.astype(np.uint8), cv2.COLOR_GRAY2BGR)
 
     insets = set()
