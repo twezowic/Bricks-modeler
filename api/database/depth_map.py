@@ -76,7 +76,7 @@ def depth_map_bottom(file_num: int, generate_images=False):
     vertices = np.array(mesh.geometry[f'{file_num}-Mesh'].vertices)
     faces = np.array(mesh.geometry[f'{file_num}-Mesh'].faces)
 
-    width, height, z_value = size
+    width, height, _ = size
     depth_map = np.full((height, width), np.inf)
 
     # znormalizowanie vertexów na mapę
@@ -221,7 +221,7 @@ def depth_map_top(file_num: int, generate_images=False):
                 cv2.drawContours(output_image, [contour],
                                  -1, (0, 0, 255), 1)
             insets.add((floor(x/40)*10+10, floor(y/40)*10+10,
-                        (ceil(depth_map[int(y), int(x)] * z_value)-4)
+                        (ceil((depth_map[int(y), int(x)] * z_value -4)/8) * 8)
                         ))
 
         elif generate_images:
