@@ -4,14 +4,18 @@ from math import ceil, floor
 import numpy as np
 import cv2
 from rich.progress import track
+import os
 
 import trimesh
 
 LENGTH = 20
 
 
-# check if sum of area of triangles creted from given point is equal to triangle
 def is_point_in_triangle(px, py, A, B, C):
+    """
+    Check if sum of area of triangles
+    creted from given point is equal to triangle
+    """
     def triangle_area(x1, y1, x2, y2, x3, y3):
         return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0)
 
@@ -104,8 +108,6 @@ def depth_map_bottom(file_num: int, generate_images=False):
     depth_map_normalized = cv2.normalize(depth_map, None, 0, 255, cv2.NORM_MINMAX)
     depth_map_normalized = depth_map_normalized.astype(np.uint8)
 
-    print(np.min(depth_map))
-
     if generate_images:
         output_image = cv2.cvtColor(depth_map_normalized.astype(np.uint8), cv2.COLOR_GRAY2BGR)
     _, binary_image = cv2.threshold(depth_map_normalized, 128, 255, cv2.THRESH_BINARY)
@@ -114,13 +116,18 @@ def depth_map_bottom(file_num: int, generate_images=False):
     inside_points = []
     if len(contours) > 0:
         largest_contour = max(contours, key=cv2.contourArea)
+
+        min_x, min_y = 0, 0
+        if (offset := width % 20) != 0:
+            min_x = offset
+    
+        if (offset := height % 20) != 0:
+            min_y = offset
         
-        epsilon = 0.02 * cv2.arcLength(largest_contour, True)
-        approx_polygon = cv2.approxPolyDP(largest_contour, epsilon, True)
 
         possible_insets = []
-        for x in range(10, width, 20):
-            for y in range(10, height, 20):
+        for x in range(10+min_x, width, 20):
+            for y in range(10+min_y, height, 20):
                 possible_insets.append([x, y])
         for point in possible_insets:
             minimum = (point[0]-3, point[1]+3)
@@ -130,7 +137,7 @@ def depth_map_bottom(file_num: int, generate_images=False):
                 if generate_images:
                     cv2.circle(output_image, tuple(point), 3, (0, 0, 255), -1)
         if generate_images:
-            cv2.drawContours(output_image, [approx_polygon], -1, (0, 255, 255), thickness=2)
+            cv2.drawContours(output_image, [largest_contour], -1, (0, 255, 255), thickness=2)
     elif np.min(depth_map) == 1:
         for x in range(10, width, 20):
             for y in range(10, height, 20):
@@ -191,6 +198,7 @@ def depth_map_top(file_num: int, generate_images=False):
 
     depth_map_normalized = depth_map_normalized.astype(np.uint8)
 
+    # do sprawdzenia czy to potrzebne po skalowaniu?
     equalized_image = cv2.equalizeHist(depth_map_normalized)
 
     # # zwiększenie kontrastu
@@ -232,10 +240,13 @@ def depth_map_top(file_num: int, generate_images=False):
     return sorted(insets)
 
 
-def generate(n=1543):
+def generate(n=1543, done=804): # part 41855
     with open('./api/database/new_parts.csv', mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for index, row in track(enumerate(reader), total=n):
+            if index < done:
+                continue
+            print(index)
             generate_top_bottom_insets(row['part_num'])
             if index == n:
                 break
@@ -245,27 +256,18 @@ def generate_top_bottom_insets(file_num: str):
     bottom = depth_map_bottom(file_num)
     top = depth_map_top(file_num)
 
-    file_name = f"depth_map/csv/{file_num}_bot.csv"
+    folder_path = f"depth_map/csv/{file_num}"
+    os.makedirs(folder_path, exist_ok=True)
+
+    file_name = f"{folder_path}/{file_num}_bot.csv"
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(bottom)
-    file_name = f"depth_map/csv/{file_num}_top.csv"
+    
+    file_name = f"{folder_path}/{file_num}_top.csv"
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(top)
 
 
-example = [
-    "122c01",
-    "2345",
-    "2339",
-    "2401",
-    "2466",
-    "3001",
-    "3003",
-    "30151",
-    "28802",
-]
-for i in example:
-    print(i)
-    generate_top_bottom_insets(i)
+generate()
