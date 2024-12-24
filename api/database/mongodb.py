@@ -1,8 +1,8 @@
 import base64
+import csv
 from dataclasses import dataclass
 import json
 from math import ceil, floor
-from pprint import pprint
 from pymongo import MongoClient
 from bson import ObjectId
 import os
@@ -26,6 +26,15 @@ sets2 = db['Sets_v2']
 reviews2 = db['Reviews_v2']
 instruction_steps2 = db['Instruction_steps_v2']
 instruction_models2 = db['Instruction_models_v2']
+
+
+models3 = db['Models_v3']
+tracks3 = db['Tracks_v3']
+sets3 = db['Sets_v3']
+reviews3 = db['Reviews_v3']
+steps3 = db['Steps_v3']
+instruction_steps3 = db['Instruction_steps_v3']
+instruction_models3 = db['Instruction_models_v3']
 
 
 def add_models(folder_path):
@@ -168,16 +177,6 @@ def get_current_steps(set_id=0, step=1):
 
 # -----------------------------------------------------------------------------------------------------
 
-
-def _get_size(minimum, maximum):
-    LENGTH = 20
-    HEIGHT = 8          # +4 inset
-    return [floor(abs(maximum[1] - minimum[1]) / LENGTH),
-            floor(abs(maximum[0] - minimum[0]) / LENGTH),
-            ceil((abs(maximum[2] - minimum[2]) - 4) / HEIGHT)
-            ]
-
-
 def add_models_v2():
     descriptions = pd.read_csv('./new_parts.csv')                  
 
@@ -237,7 +236,7 @@ def get_thumbnails_v2(name: str = "", category: str = "", size: list[int] = [0, 
     return result
 
 
-def get_models_v2(name: str):
+def get_model_v2(name: str):
     model = models2.find_one({'model': name}, {"file": 1})
 
     if model:
@@ -273,8 +272,19 @@ def get_track_v2(id):
     return tracks2.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0})
 
 
-def _max_values():       # [48, 56, 49], dane z 12.11.24
-    cursor = models2.find({}, {'size': 1})
+# ------------------------------------------------------------------------------------
+
+def _get_size(minimum, maximum):
+    LENGTH = 20
+    HEIGHT = 8          # +4 inset
+    return [floor(abs(maximum[1] - minimum[1]) / LENGTH),
+            floor(abs(maximum[0] - minimum[0]) / LENGTH),
+            ceil((abs(maximum[2] - minimum[2]) - 4) / HEIGHT)
+            ]
+
+
+def _max_values():       # [48, 56, 39], dane z 12.24.24
+    cursor = models3.find({}, {'size': 1})
 
     max_res = [0, 0, 0]
     for m in cursor:
@@ -285,8 +295,75 @@ def _max_values():       # [48, 56, 49], dane z 12.11.24
     return max_res
 
 
+def _load_depth_maps(part_num: str):
+    base_path = "/home/tomek/Documents/lego_pd/depth_map/csv"
+
+    bot_file = os.path.join(base_path, f"{part_num}/{part_num}_bot.csv")
+    top_file = os.path.join(base_path, f"{part_num}/{part_num}_top.csv")
+
+    with open(bot_file, mode='r') as bot_csv:
+        reader = csv.reader(bot_csv)
+        insets_bot = [row for row in reader]
+
+    with open(top_file, mode='r') as top_csv:
+        reader = csv.reader(top_csv)
+        insets_top = [row for row in reader]
+
+    return insets_top, insets_bot
+
+
+def add_models_v3():
+    descriptions = pd.read_csv('./new_parts_without_wheels.csv')                  
+
+    for i, row in descriptions.iterrows():
+        part_num = row['part_num']
+        category = row['part_cat_id']
+        description = row['name']
+        print(f"{i}/{len(descriptions)}")
+
+        gltf_file_path = os.path.join("./gltf", f"{part_num}.gltf")
+
+        with open(gltf_file_path, 'r') as file:
+            content = file.read()
+
+        thumbnail_path = os.path.join("./thumbnails", f"{part_num}.png")
+
+        with open(thumbnail_path, 'rb') as img_file:
+            thumbnail = img_file.read()
+        thumbnail_base64 = base64.b64encode(thumbnail).decode('utf-8')
+
+        metadata = json.loads(content)
+        minimum = metadata['accessors'][0]['min']
+        maximum = metadata['accessors'][0]['max']
+
+        top, bot = _load_depth_maps(part_num)
+
+        document = {
+            'model': part_num,
+            'file': content,
+            'description': description,
+            'category': category,
+            'thumbnail': thumbnail_base64,
+            'size': _get_size(minimum, maximum),
+            'min': minimum,
+            'max': maximum,
+            'insets_top': top,
+            'insets_bot': bot,
+        }
+
+        models3.insert_one(document)
+
+
+def get_model_v3(name: str):
+    model = models3.find_one({'model': name}, {"file": 1})
+
+    if model:
+        file_content = model['file']
+        return file_content
+    else:
+        print(f"Model {name} not found.")
+
+
 if __name__ == "__main__":
-    # add_models('./gltf')
-    # get_model('2926')
-    # add_models_v2()
     print(_max_values())
+    # add_models_v3()
