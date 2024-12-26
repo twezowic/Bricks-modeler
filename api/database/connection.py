@@ -1,25 +1,12 @@
-import json
 from dataclasses import dataclass
 import numpy as np
 from pprint import pprint
 from collections import defaultdict
-from math import ceil, floor
-import csv
 
-from database.mongodb import get_model
+from database.mongodb import get_model_v3_metadata
 
 LENGTH = 20
 HEIGHT = 8
-
-
-def load_depth_map_csv(path):
-    result = []
-    with open(path, 'r') as fh:
-        reader = csv.reader(fh)
-        for row in reader:
-            mapped = np.array((int(row[0]), int(row[1]), int(row[2])))
-            result.append(mapped)
-    return result
 
 
 @dataclass
@@ -28,28 +15,33 @@ class Model:
     gltf: str
     middle: list
     minimum: list
-    maximum: list
     rotation: list
-    size: list
-    height: int
+    map_top: list
+    map_bot: list
 
-    def get_insertions(self):
-        # zamienić potem na wczytywanie z self
-        half_x = self.size[0] / 2
-        half_y = self.size[1] / 2
-        half_z = self.height / 2
+    def get_insertions(self) -> tuple[list, list]:
+        """
+        Computes the insets in world location from
+        part world location and saved depth map.
+
+        Returns:
+          Tuple with 2 lists representing top and bottom
+          insets positions.
+        """
         offset = np.array(
-            [self.middle[0]+self.minimum[0], self.middle[1]+self.minimum[1], self.middle[2]+self.minimum[2]]
+            [self.middle[0]+self.minimum[0],
+             self.middle[1]+self.minimum[1],
+             self.middle[2]+self.minimum[2]]
         )
 
-        depth_map = load_depth_map_csv(f"../depth_map/csv/{self.gltf}_top.csv")
+        print(self.map_top)
+
         result_top = [
-            point+offset for point in depth_map
+            point+offset for point in self.map_top
         ]
 
-        depth_map = load_depth_map_csv(f"../depth_map/csv/{self.gltf}_bot.csv")
         result_bot = [
-            point+offset for point in depth_map
+            point+offset for point in self.map_bot
         ]
 
         result_top_array = np.array(result_top)
@@ -58,9 +50,16 @@ class Model:
         result_top_array = self.apply_rotation(result_top_array)
         result_bot_array = self.apply_rotation(result_bot_array)
 
-        return result_bot_array, result_top_array
+        return result_top_array, result_bot_array
 
-    def get_rotation_matrix(self):
+    def _get_rotation_matrix(self):
+        """
+        Computes the 3D rotation matrix based on the object's rotation angles.
+
+        Returns:
+            np.ndarray: A 3x3 rotation matrix representing
+            the cumulative rotation.
+        """
         angles = self.rotation
         cos_x, sin_x = np.cos(angles[0]), np.sin(angles[0])
         cos_y, sin_y = np.cos(angles[1]), np.sin(angles[1])
@@ -87,175 +86,66 @@ class Model:
         R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
-    def apply_rotation(self, points):
-        rotation_matrix = self.get_rotation_matrix()
+    def apply_rotation(self, points: list):
+        """
+        Applies a 3D rotation to a set of points
+        based on the object's rotation.
+
+        Returns:
+            np.ndarray: The rotated points with the same shape as the input.
+        """
+        rotation_matrix = self._get_rotation_matrix()
         points_rotated = points.reshape(-1, 3)
 
         for i in range(points_rotated.shape[0]):
             point = points_rotated[i]
-            point_rotated = np.dot(rotation_matrix, point - self.middle) + self.middle
+            point_rotated = np.dot(rotation_matrix, point - self.middle) \
+                + self.middle
             points_rotated[i] = point_rotated
 
         return points_rotated.reshape(points.shape)
 
-
     @staticmethod
-    def from_json(scene):
+    def from_json(scene: list[dict]) -> list['Model']:
         models = []
         for model in scene:
             model_name = model['gltfPath']
-            minimum, maximum = get_metadata(model_name)
-            height = (maximum[2] - minimum[2]) // HEIGHT
-            size = [ceil(abs(minimum[1] - maximum[1])/LENGTH), ceil(abs(minimum[0] - maximum[0])/LENGTH)]
-            models.append(Model(model['name'], model['gltfPath'], model['position'], minimum, maximum, model['rotation'], size, height))
+            minimum, _, map_top, map_bot = _get_metadata(model_name)
+            models.append(Model(model['name'],
+                                model['gltfPath'],
+                                model['position'],
+                                minimum,
+                                model['rotation'],
+                                map_top,
+                                map_bot))
         return models
 
 
-def get_metadata(model_name):
-    model = json.loads(get_model(model_name))
-    minimum = model['accessors'][0]['min']
-    maximum = model['accessors'][0]['max']
-    return minimum, maximum
+def _get_metadata(model_name: str):
+    model = get_model_v3_metadata(model_name)
+    return model['min'], model['max'], model['insets_top'], model['insets_bot']
 
 
-def check_connection(models) -> dict[str, list]:
+def check_connection(models: list[dict]) -> dict[str, list]:
+    """
+    Returns dict of model_id and list of list of insets [top, bot].
+    """
     points = defaultdict(list)
     for model in Model.from_json(models):
-        bot, top = model.get_insertions()
-        if bot is not None or top is not None:
-            points[model.name] = [bot, top]
+        top, bot = model.get_insertions()
+        if top is not None or bot is not None:  # TODO check if needed
+            points[model.name] = [top, bot]
     return points
 
 
-@dataclass
-class ModelDB:
-    model_id: str
-    color: str
-    name: str
-
-    @staticmethod
-    def from_scene(scene,):
-        result = []
-        for model in scene:
-            result.append(ModelDB(model['name'],  model['color'], (model['gltfPath'])))
-        return result
-    
-    def __eq__(self, value: 'ModelDB'):
-        return all([
-            self.color == value.color,
-            self.name == value.name
-        ])
-    
-
-@dataclass
-class StepDB:
-    up_mask: str
-    up_id: str
-    down_mask: str
-    down_id: str
-
-    def __eq__(self, value: 'StepDB'):
-        return all([
-            self.up_mask == value.up_mask,
-            self.up_id == value.up_id,
-            self.down_mask == value.down_mask,
-            self.down_id == value.down_id,
-        ])
-    
-    def __hash__(self):
-        return hash((self.up_mask, self.up_id, self.down_mask, self.down_id))
-
-
-def get_masks(coords1, coords2):
-    # symetrie sprawdzać przez np.rot90(a, n= 1 | 2 | 3 ) to chyba i tak w sprawdzaniu?
-    maska1 = np.zeros(coords1.shape[:2], dtype=bool)
-    maska2 = np.zeros(coords2.shape[:2], dtype=bool)
-
-    coords2_flat = coords2.reshape(-1, coords2.shape[-1])
-    for i in range(coords1.shape[0]):
-        for j in range(coords1.shape[1]):
-            punkt = coords1[i, j]
-
-            if any(np.all(punkt == p) for p in coords2_flat):
-                maska1[i, j] = True
-
-    coords1_flat = coords1.reshape(-1, coords1.shape[-1])
-    for i in range(coords2.shape[0]):
-        for j in range(coords2.shape[1]):
-            punkt = coords2[i, j]
-
-            if any(np.all(punkt == p) for p in coords1_flat):
-                maska2[i, j] = True
-
-    return maska1, maska2
-
-
-def temp_prepare_steps(scene):
-    models = check_connection(scene.models if not isinstance(scene, list) else scene )
-
-    coordinate_map = defaultdict(list)
-
-    for model_name, coordinates in models.items():
-        # temp
-        if len(coordinates[0]) and len(coordinates[1]):
-            coordinates = np.concatenate((coordinates[0], coordinates[1]))
-        elif not len(coordinates[1]):
-            coordinates = coordinates[0]
-        else:
-            coordinates = coordinates[1]
-        down = np.min(coordinates[:, 2])
-        for coord_set in coordinates.reshape(-1, 3):
-            key = tuple(coord_set)
-            coordinate_map[key].append((model_name, int(down)))
-
-    graph = defaultdict(set)
-
-    for models_with_same_coords in coordinate_map.values():
-        for i in range(len(models_with_same_coords)):
-            for j in range(i + 1, len(models_with_same_coords)):
-                graph[models_with_same_coords[i]].add(models_with_same_coords[j])
-                graph[models_with_same_coords[j]].add(models_with_same_coords[i])
-
-    instruction_steps = []
-    for key, values in graph.items():
-        height = key[1]
-        for model_name, model_height in values:
-            if model_height > height:
-                maska1, maska2 = get_masks(models[key[0]][1], models[model_name][0])
-
-                # pprint(maska1)
-                flatten_mask_1 = ''.join(maska1.astype(int).astype(str).flatten())
-                # pprint(flatten_mask_1)
-                # print()
-
-                # pprint(maska2)
-                flatten_mask_2 = ''.join(maska2.astype(int).astype(str).flatten())
-                # pprint(flatten_mask_2)
-                # print()
-
-                instruction_steps.append(StepDB(flatten_mask_1, key[0], flatten_mask_2, model_name))
-
-    # pprint(instruction_steps)
-
-    # filepath = os.path.join("database/instruction_temp", str(datetime.datetime.now()))
-    # with open(filepath, "w") as file:
-    #     data = {
-    #         "instruction_models": [asdict(item) for item in ModelDB.from_scene(scene)],
-    #         "instruction_steps":  [asdict(item) for item in instruction_steps]
-    #     }
-    #     json.dump(data, file, indent=4)
-
-    return ModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_steps
-
-
-def find_connected_groups(scene) -> list[tuple[str, int]]:
-
-    # dict model_name -> wszystkie możliwe połączenia
+def get_models_connection(scene: dict[str, list]):
+    """
+    Returns dict [model_name: models_names_connected_to_key]
+    """
+    # słownik model_name -> pojedyńcze połączenie
     models = check_connection(scene.models)
 
-    pprint(models)
-
-    # słownik model_name -> pojedyńcze połączenie
+    # TODO może to usprawnić żeby faktycznie korzystało z top i bottom
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models.items():
@@ -278,11 +168,17 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
     for models_with_same_coords in coordinate_map.values():
         for i in range(len(models_with_same_coords)):
             for j in range(i + 1, len(models_with_same_coords)):
-                graph[models_with_same_coords[i]].add(models_with_same_coords[j])
-                graph[models_with_same_coords[j]].add(models_with_same_coords[i])
+                graph[models_with_same_coords[i]].add(
+                    models_with_same_coords[j])
+                graph[models_with_same_coords[j]].add(
+                    models_with_same_coords[i])
 
-    pprint(graph)
-            
+    return models, graph
+
+
+def find_connected_groups(scene) -> list[tuple[str, int]]:
+    models, graph = get_models_connection(scene)
+
     # Depth first-search
     # Do otrzymania grup połączeń
     def dfs(model, visited):
@@ -308,7 +204,8 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
 
     # dodaje modele nie połączone
     all_model_names = {model_name for model_name in models.keys()}
-    unconnected_models = all_model_names - set(model for model, _ in graph.keys())
+    unconnected_models = all_model_names - set(
+        model for model, _ in graph.keys())
     for model in unconnected_models:
         groups.append([(model, 0)])
 
@@ -317,6 +214,7 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
     return groups
 
 
+# TODO temporary to delete only showing insets positions
 def connection_for_api(scene) -> dict:
     points = check_connection(scene.models)
 
