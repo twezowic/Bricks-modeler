@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -85,11 +86,23 @@ class SceneInstruction(Scene):
     user_id: str
 
 
-@app.post('instruction/generate')
+@app.post('/instruction/generate')
 async def generate_instruction(scene: SceneInstruction):
     models, connections = prepare_step(scene)
-    steps = generate_stepdb(models, connections, None)
-    mongodb.add_instruction(scene.name, scene.user_id, steps)
+    steps = generate_stepdb(models, connections)
+    set_id = mongodb.add_instruction(scene.name, scene.user_id, steps)
+    return {"steps": steps, "set_id": set_id}
+
+
+class Instruction(BaseModel):
+    set_id: str
+    instruction: list[Optional[bytes]]
+
+
+@app.put('/instruction/generate')
+async def add_instruction_to_set(instruction: Instruction):
+    mongodb.add_instruction_to_set(instruction.set_id,
+                                   instruction.instruction)
 
 
 class Instruction(BaseModel):

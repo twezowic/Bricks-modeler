@@ -10,7 +10,7 @@ import { proxy, useSnapshot } from 'valtio';
 import { ip } from "../utils"
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth0 } from '@auth0/auth0-react';
-import RenderToPNG from './Renderer';
+import Renderer from './Renderer';
 
 const state = proxy({ mode: 0, selected: [] });
 
@@ -74,7 +74,8 @@ export default function Modeler({ color }) {
         state.selected = [];
       } 
       else if (event.key === "k") {
-        checkInstruction();
+        // checkInstruction();
+        generateSteps()
       }
       else if (event.key === 'Shift') {
         setTooglePoints(!tooglePoints);
@@ -91,6 +92,29 @@ export default function Modeler({ color }) {
       window.removeEventListener('keydown', handleKeyDown);
     };
   });
+
+  async function generateSteps(){
+    try {
+        const response = await fetch(`${ip}/instruction/generate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({'models': models, 'user_id': '1', 'name': '1' })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        console.log(data)
+        return data;
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+  }
 
   const handleDrop = async (event) => {
     event.preventDefault();
@@ -208,42 +232,7 @@ export default function Modeler({ color }) {
     setModels(newModels);
     
     await getConnection(newModels);
-  };
-
-  const updateModelPosition = (name, newPosition, newRotation) => {
-    const group = snap.selected;
-    const mainModel = models.find(model => model.name === name);
-  
-    const deltaX = newPosition[0] - mainModel.position[0];
-    const deltaY = newPosition[1] - mainModel.position[1];
-    const deltaZ = newPosition[2] - mainModel.position[2];
-  
-    const deltaRotX = newRotation[0] - mainModel.rotation[0];
-    const deltaRotY = newRotation[1] - mainModel.rotation[1];
-    const deltaRotZ = newRotation[2] - mainModel.rotation[2];
-  
-    const newModels = models.map((model) => {
-      if (group.includes(model.name)) {
-        return {
-          ...model,
-          position: [
-            model.position[0] + deltaX,
-            model.position[1] + deltaY,
-            model.position[2] + deltaZ,
-          ],
-          rotation: [
-            model.rotation[0] + deltaRotX,
-            model.rotation[1] + deltaRotY,
-            model.rotation[2] + deltaRotZ,
-          ],
-        };
-      }
-      return model;
-    });
-  
-    setModels(newModels);
-  };
-  
+  };  
 
   const getEmptySpace = () => {
     if (models.length === 0) {
@@ -375,7 +364,7 @@ export default function Modeler({ color }) {
 
   return (
     <div
-    className="float-right w-full h-[80vh]"
+    className="float-right w-full h-[80vh] gap-10"
     onDrop={handleDrop}
     onDragOver={handleDragOver}
   >
@@ -426,6 +415,10 @@ export default function Modeler({ color }) {
         </GizmoHelper>
         {/* <RenderToPNG/> */}
       </Canvas>
+      <div>
+
+      <Renderer glRef={glRef} sceneRef={sceneRef} cameraRef={cameraRef} getSteps={generateSteps}/>
+      </div>
     </div>
   );
 }

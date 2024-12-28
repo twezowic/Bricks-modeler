@@ -229,7 +229,6 @@ def add_instruction(name: str, user_id: str,
     model_document = {
         'name': name,
         'user_id': user_id,
-        'thumbnail': steps[-1].thumbnail,
     }
 
     set_inserted = sets3.insert_one(model_document)
@@ -238,8 +237,7 @@ def add_instruction(name: str, user_id: str,
 
     for index, step in enumerate(steps):
         connection_document = {
-            'thumbnail': step.thumbnail,
-            'set_id': set_inserted._id,
+            'set_id': set_inserted.inserted_id,
             'step': index,
             'models': json.dumps([asdict(model)for model in step.models]),
             'connections': json.dumps([asdict(connection)for connection in step.connections]),
@@ -248,6 +246,32 @@ def add_instruction(name: str, user_id: str,
 
     if connection_documents:
         steps3.insert_many(connection_documents)
+
+    return str(set_inserted.inserted_id)
+
+
+def add_instruction_to_set(set_id, thumbnails):
+    for index, thumbnail in enumerate(thumbnails):
+        steps3.update_one(
+            {'set_id': ObjectId(set_id), 'step': index},
+            {'$set': {'instruction': thumbnail}}
+        )
+
+
+def get_instruction(set_id: str):
+    try:
+        object_id = ObjectId(set_id)
+    except Exception as e:
+        print(f"Invalid ObjectId: {e}")
+        return None
+
+    result = sets3.find_one({'set_id': object_id})
+    if result is None:
+        print(f"No document found for set_id: {set_id}")
+    else:
+        print(result)
+    
+    return result
 
 
 def get_step(set_id: int, step: int):
@@ -258,12 +282,12 @@ def get_step(set_id: int, step: int):
 
 def get_step_models(set_id: int, step: int):
     """
-    Returns models and thumbnail of given step of instruction.
+    Returns models of given step of instruction.
     """
     step_result = steps3.find_one({'set_id': set_id, 'step': step})
     c = Counter((model['name'], model['color']) for model in step_result.models)
 
-    return [{"name": model[0], "color": model[1], "count": count} for model, count in c.items()], step_result.thumbnail
+    return [{"name": model[0], "color": model[1], "count": count} for model, count in c.items()], step_result.instruction
 
 
 if __name__ == "__main__":
