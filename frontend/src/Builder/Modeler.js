@@ -10,6 +10,7 @@ import { proxy, useSnapshot } from 'valtio';
 import { ip } from "../utils"
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth0 } from '@auth0/auth0-react';
+import RenderToPNG from './Renderer';
 
 const state = proxy({ mode: 0, selected: [] });
 
@@ -21,6 +22,10 @@ export default function Modeler({ color }) {
   const glRef = useRef(null);
 
   const [currentlyMoving, setCurrentlyMoving] = useState(false);
+  const [correctSteps, setCorrectSteps] = useState(false);
+
+  const [points, setPoints] = useState([]);
+  const [tooglePoints, setTooglePoints] = useState(false);
 
   const snap = useSnapshot(state);
   const [groups, setGroups] = useState([]);
@@ -41,6 +46,14 @@ export default function Modeler({ color }) {
     };
     loadHistory();
   }, []);
+
+//   useEffect(() => {
+//     const asyncCalculate = async () => {
+//       const result = await checkInstruction();
+//       setCorrectSteps(result);
+//     };
+//     asyncCalculate();
+// }, [models]);
   
 
   useEffect(() => {
@@ -50,18 +63,26 @@ export default function Modeler({ color }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (isAuthenticated && event.key === 'Enter') {
+      if (event.key === 'Enter') {
         saveScene();
       } else if (event.key === '\\') {
         // loadScene();
-        saveInstructionSteps()
+        // saveInstructionSteps()
       } else if (event.key === 'Delete') {
         const newModels = models.filter(model => !state.selected.includes(model.name));
         setModels(newModels);
         state.selected = [];
-      } else if (event.key === "k") {
+      } 
+      else if (event.key === "k") {
         checkInstruction();
       }
+      else if (event.key === 'Shift') {
+        setTooglePoints(!tooglePoints);
+        if (!tooglePoints){
+          getConnection123();
+        }
+      }
+
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -81,6 +102,7 @@ export default function Modeler({ color }) {
     
     try {
       const part = JSON.parse(data);
+      console.log(part)
       addNewModel(color, part);
     } catch (error) {
       console.error(error);
@@ -124,6 +146,7 @@ export default function Modeler({ color }) {
 
         const data = await response.json();
         console.log(data)
+        return data;
 
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -183,6 +206,7 @@ export default function Modeler({ color }) {
     };
     const newModels = [...models, newModel];
     setModels(newModels);
+    
     await getConnection(newModels);
   };
 
@@ -300,6 +324,54 @@ export default function Modeler({ color }) {
   //   input.click();
   // };
 
+  const getConnection123 = async () => {
+    try {
+        const response = await fetch(`${ip}/connection123`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 'models': models })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+
+        console.log(data);
+
+        const newPoints = data.map(item => ({
+            point: item.point,
+            color: item.color
+        }));
+        setPoints(newPoints);
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+};
+
+
+  const Points = ({ data }) => {
+    return (
+      <>
+        {data.map((point, index) => (
+          <Point key={index} position={point.point} color={point.color}/>
+        ))}
+      </>
+    );
+  };
+
+  const Point = ({ position, color }) => {
+    return (
+      <mesh position={position}>
+        <sphereGeometry args={[5, 10, 10]} />
+        <meshStandardMaterial color={color} />
+      </mesh>
+    );
+  };
 
   return (
     <div
@@ -307,13 +379,20 @@ export default function Modeler({ color }) {
     onDrop={handleDrop}
     onDragOver={handleDragOver}
   >
+      {/* <div className={`absolute top-20 right-12 items-center justify-between px-2 flex gap-2 border-2 border-black`}>
+        <div className={`w-8 h-8 rounded-full ${correctSteps ? "bg-green-400" : "bg-red-600"}`}/>
+        <img
+          src={'/instruction_temp.png'}
+          alt={`instruction_temp`}
+          className='w-[200px] h-auto border-l-2 border-black'
+        />
+      </div> */}
       <Canvas camera={{ position: [0, 10, 10], fov: 50 }} onCreated={({ gl, scene, camera }) => {
         glRef.current = gl;
         sceneRef.current = scene;
         cameraRef.current = camera;
       }}>
-        <pointLight position={[0, 10, 0]} intensity={100} />
-        {/* <hemisphereLight color="#ffffff" groundColor="#b9b9b9" position={[-7, 25, 13]} intensity={0.85} /> */}
+        <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
         <Suspense fallback={null}>
           <group position={[0, 0.5, 0]} scale={0.05} rotation={[-Math.PI / 2, 0, 0]}>
             {models.map((model, index) => (
@@ -325,19 +404,27 @@ export default function Modeler({ color }) {
                 rotation={model.rotation}
                 state={state}
                 color={model.color}
-                onPositionChange={(newPosition, newRotation) => updateModelPosition(model.name, newPosition, newRotation)}
                 groups={groups}
                 currentlyMoving={currentlyMoving}
               />
             ))}
-
+            {tooglePoints &&
+              <Points data={points} />
+            }
           </group>
           <Ground />
         </Suspense>
-        <Controls state={state} getConnection={getConnection} setCurrentlyMoving={setCurrentlyMoving}/>
+        <Controls 
+          state={state} 
+          getConnection={getConnection} 
+          setCurrentlyMoving={setCurrentlyMoving} 
+          models={models}
+          setModels={setModels}
+        />
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport axisColors={['#9d4b4b', '#2f7f4f', '#3b5b9d']} labelColor="white" />
         </GizmoHelper>
+        {/* <RenderToPNG/> */}
       </Canvas>
     </div>
   );

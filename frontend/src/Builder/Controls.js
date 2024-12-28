@@ -9,7 +9,7 @@ const step = 10;
 const vertical = 8;
 const rotationStep = Math.PI / 2;
 
-export default function Controls({ state, getConnection, setCurrentlyMoving }) {
+export default function Controls({ state, getConnection, setCurrentlyMoving, models, setModels }) {
   const snap = useSnapshot(state);
   const { scene, camera, gl } = useThree();
   const transformControls = useRef();
@@ -17,7 +17,6 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
   const [isMovingDisabled, setMovingDisabled] = useState(false);
 
   function roundPosition(object) {
-    if (transformControls.current.mode === 'translate') {
       if (object.rotation.x === Math.PI / 2 || object.rotation.x === -Math.PI / 2) {
         object.position.x = Math.round(object.position.x / step) * step;
         object.position.y = Math.round(object.position.y / vertical) * vertical;
@@ -31,11 +30,27 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
         object.position.y = Math.round(object.position.y / step) * step;
         object.position.z = Math.round(object.position.z / vertical) * vertical;
       }
-    } else if (transformControls.current.mode === 'rotate') {
+    if (transformControls.current.mode === 'rotate') {
       object.rotation.x = Math.round(object.rotation.x / rotationStep) * rotationStep;
       object.rotation.y = Math.round(object.rotation.y / rotationStep) * rotationStep;
       object.rotation.z = Math.round(object.rotation.z / rotationStep) * rotationStep;
     }
+  }
+
+  function rotatePoint3D(center, object, radZ) {
+    const translatedX = object.x - center.x;
+    const translatedY = object.y - center.y;
+    const translatedZ = object.z - center.z;
+
+    const finalPointX = translatedX * Math.cos(radZ) - translatedY * Math.sin(radZ);
+    const finalPointY = translatedX * Math.sin(radZ) + translatedY * Math.cos(radZ);
+    const finalPointZ = translatedZ;
+
+    return {
+        x: finalPointX + center.x,
+        y: finalPointY + center.y,
+        z: finalPointZ + center.z
+    };
   }
 
   useEffect(() => {
@@ -50,8 +65,6 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
         const deltaY = mainObject.position.y - initialTransforms.current[mainObject.name].position.y;
         const deltaZ = mainObject.position.z - initialTransforms.current[mainObject.name].position.z;
 
-        const deltaRotX = mainObject.rotation.x - initialTransforms.current[mainObject.name].rotation.x;
-        const deltaRotY = mainObject.rotation.y - initialTransforms.current[mainObject.name].rotation.y;
         const deltaRotZ = mainObject.rotation.z - initialTransforms.current[mainObject.name].rotation.z;
 
         roundPosition(mainObject);
@@ -64,9 +77,19 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
             object.position.y = initialTransforms.current[name].position.y + deltaY;
             object.position.z = initialTransforms.current[name].position.z + deltaZ;
 
-            object.rotation.x = initialTransforms.current[name].rotation.x + deltaRotX;
-            object.rotation.y = initialTransforms.current[name].rotation.y + deltaRotY;
             object.rotation.z = initialTransforms.current[name].rotation.z + deltaRotZ;
+
+            if (deltaRotZ) {
+              const rotated = rotatePoint3D(
+                mainObject.position, 
+                object.position, 
+                Math.round(object.rotation.z / rotationStep) * rotationStep
+              )
+
+              object.position.x = rotated.x;
+              object.position.y = rotated.y;
+              object.position.z = rotated.z;
+            }
 
             roundPosition(object);
           }
@@ -75,8 +98,28 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
 
       const onFinishMove = async () => {
         setMovingDisabled(true);
+
+        const updatedModels = models.map((model) => {
+          if (snap.selected.includes(model.name)) {
+            const object = scene.getObjectByName(model.name);
+  
+            if (object) {
+              return {
+                ...model,
+                position: [object.position.x, object.position.y, object.position.z],
+                rotation: [object.rotation.x, object.rotation.y, object.rotation.z],
+              };
+            }
+          }
+          return model;
+        });
+
+        console.log(updatedModels)
+  
+        setModels(updatedModels);
+
         try {
-          await getConnection();
+          await getConnection(updatedModels);
         } catch (error) {
           console.error("Error fetching groups:", error);
         } finally {
@@ -124,6 +167,8 @@ export default function Controls({ state, getConnection, setCurrentlyMoving }) {
           mode={modes[snap.mode]}
           camera={camera}
           gl={gl.domElement}
+          showX={modes[snap.mode] === 'translate'}
+          showZ={modes[snap.mode] === 'translate'}
         />
       )}
       <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />

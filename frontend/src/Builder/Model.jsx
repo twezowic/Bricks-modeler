@@ -7,37 +7,14 @@ import { ip } from '../utils';
 
 const modes = ['translate', 'rotate'];
 
-export default function Model({ name, gltfPath, state, color = 'white', onPositionChange, groups, currentlyMoving, ...props }) {
+export default function Model({ name, gltfPath, state, color = 'white', groups, currentlyMoving, ...props }) {
   const snap = useSnapshot(state);
   const [hovered, setHovered] = useState(false);
   const { nodes } = useGLTF(`${ip}/model/${gltfPath}`);
   const ref = useRef();
-  const prevPosition = useRef([0, 0, 0]);
-  const prevRotation = useRef([0, 0, 0]);
 
   useCursor(hovered);
   useGLTF.preload(`${ip}/model/${gltfPath}`);
-
-  useFrame(() => {
-    if (ref.current) {
-      const { position, rotation } = ref.current;
-      const currentPosition = [position.x, position.y, position.z];
-      const currentRotation = [rotation.x, rotation.y, rotation.z];
-
-      if (!metadataEqual(currentPosition, prevPosition.current) || !metadataEqual(currentRotation, prevRotation.current)) {
-        onPositionChange(currentPosition, currentRotation);
-        prevPosition.current = currentPosition;
-        prevRotation.current = currentRotation;
-      }
-    }
-  });
-
-
-
-  function metadataEqual(meta1, meta2) {
-    return meta1[0] === meta2[0] && meta1[1] === meta2[1] && meta1[2] === meta2[2];
-  }
-
 
   function findHeight(modelName) {
     for (const group of groups) {
@@ -87,6 +64,8 @@ export default function Model({ name, gltfPath, state, color = 'white', onPositi
       geometry={nodes[gltfPath].geometry}
       material={new THREE.MeshPhongMaterial()}
       material-color={color}
+      // material-transparent={true}
+      // material-opacity={0.5}
       material-specular={'#7c71a2'}
       dispose={null}
       {...props}
