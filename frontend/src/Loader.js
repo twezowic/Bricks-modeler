@@ -31,7 +31,8 @@ function Loader() {
     const trackData = await getTrack(model_id);
 
     const url = trackData.set_id ? `/?track_id=${model_id}&set_id=${trackData.set_id}`: `/?track_id=${model_id}`
-    navigate(url, {state: { models: trackData.track }});
+    localStorage.setItem('models', JSON.stringify(trackData.track));
+    navigate(url);
   };
 
   const handleAddNewModel = () => {

@@ -66,15 +66,35 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   // Logika wczytywania z loadera
   useEffect(() => {
     const loadHistory = async () => {
-      if (location.state?.models) {
-        setModels(location.state.models);
-        await getConnection(location.state.models)
+      let savedModels = sessionStorage.getItem('models');
+      const modelsFromLoader = localStorage.getItem('models');
+
+      if (modelsFromLoader){
+        savedModels = modelsFromLoader;
+        sessionStorage.setItem('models', JSON.stringify(models));
+        localStorage.removeItem('models');
+      }
+      const modelsJSON = JSON.parse(savedModels)
+      if (modelsJSON) {
+        setModels(modelsJSON);
+        await getConnection(modelsJSON)
       } else {
         setModels([]);
       }
     };
     loadHistory();
   }, []);
+
+
+  useEffect(() => {
+    const saveProgress = () => {
+      sessionStorage.setItem('models', JSON.stringify(models));
+    };
+
+    const interval = setInterval(saveProgress, 15 * 1000); // 15 sekund
+
+    return () => clearInterval(interval);
+  }, [models]);
 
   useEffect(() => {
     const asyncCalculate = async () => {
