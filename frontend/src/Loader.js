@@ -24,12 +24,14 @@ function Loader() {
   const getTrack = async (model_id) => {
     const response = await fetch(`${ip}/tracks/${model_id}`);
     const data = await response.json();
-    return data['track'];
+    return data
   }
 
   const handleThumbnailClick = async (model_id) => {
     const trackData = await getTrack(model_id);
-    navigate('/', {state: { models: trackData }});
+
+    const url = trackData.set_id ? `/?track_id=${model_id}&set_id=${trackData.set_id}`: `/?track_id=${model_id}`
+    navigate(url, {state: { models: trackData.track }});
   };
 
   const handleAddNewModel = () => {

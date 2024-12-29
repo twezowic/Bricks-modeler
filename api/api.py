@@ -43,13 +43,14 @@ class Track(BaseModel):
     track: list
     thumbnail: str
     user_id: str
+    set_id: str
 
 
 @app.post("/tracks")
 async def save_track(track: Track):
     try:
         mongodb.add_track_v3(track.name, track.track,
-                             track.thumbnail, track.user_id)
+                             track.thumbnail, track.user_id, track.set_id)
         return {"message": "Track added successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -68,6 +69,16 @@ async def get_track(track_id: str):
         return result
     else:
         raise HTTPException(status_code=404, detail="Track not found")
+
+
+class Track(BaseModel):
+    track: list
+    thumbnail: str
+
+
+@app.put("/tracks/{track_id}")
+async def update_track(track_id: str, track: Track):
+    mongodb.update_track(track_id, track.track, track.thumbnail)
 
 
 class Scene(BaseModel):
@@ -123,6 +134,11 @@ async def get_instruction_models(set_id: str, step: int):
     return mongodb.get_step_models(set_id, step)
 
 
+@app.get("/instruction/{set_id}")
+async def get_instruction(set_id: str):
+    return mongodb.get_instruction(set_id)
+
+
 # TODO delete
 
 class Scene(BaseModel):
@@ -132,3 +148,8 @@ class Scene(BaseModel):
 @app.post('/connection123')
 async def get_connections(models: Scene):
     return connection_for_api(models)
+
+
+@app.get("/sets/{page_index}")
+async def get_sets(page_index: int):
+    return mongodb.get_sets(page_index)

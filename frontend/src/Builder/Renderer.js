@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { jsPDF } from 'jspdf';
 import { ip } from '../utils';
+import { Button } from '@mui/material';
 
 export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
   async function saveInstruction(instruction, set_id){
@@ -52,9 +53,8 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
     const prevAlpha = gl.getClearAlpha();
   
     // kolor tła
-    gl.setClearColor('#74b1ef', 1); // Czarny kolor tła
+    gl.setClearColor('#74b1ef', 1);
   
-    // Tymczasowy rozmiar renderera
     const prevSize = gl.getSize(new THREE.Vector2());
     gl.setSize(width, height);
   
@@ -77,8 +77,8 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
 
     console.log(set_id)
   
-    const modelsSteps = data.steps.map(step => step.models.map(model => model.model_id));
-  
+    const modelsSteps = data.steps.map(step => step.models.map(model => model.model_id)).reverse();
+
     const sceneCopy = sceneRef.current.clone(true);
 
 
@@ -117,10 +117,10 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
 
     // pdf.save('zapisana_instrucja.pdf')
 
-    await saveInstruction(images.splice(1).reverse(), set_id);
+    await saveInstruction(images.reverse().splice(1), set_id);
   };
   
   return (
-    <button onClick={generateInstruction} className='px-100'>Klik</button>
+    <button onClick={generateInstruction} className='px-2 py-2 rounded-[8px] bg-white'>Generate Instruction</button>
   );
 }

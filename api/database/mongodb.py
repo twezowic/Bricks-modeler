@@ -181,7 +181,14 @@ def get_all_tracks_v3(user_id):
 
 
 def get_track_v3(id: str):
-    return tracks3.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0})
+    return tracks3.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0, 'set_id': 1})
+
+
+def update_track(id: str, track, thumbnail):
+    tracks3.update_one(
+        {'_id': ObjectId(id)},
+        {'$set': {'track': track, 'thumbnail': thumbnail}}
+    )
 
 
 def add_review(set_id: str, comment: str, rating: int, user_id):
@@ -235,12 +242,14 @@ def add_instruction(name: str, user_id: str,
 
     connection_documents = []
 
+    steps.reverse()
+
     for index, step in enumerate(steps):
         connection_document = {
             'set_id': set_inserted.inserted_id,
             'step': index,
-            'models': json.dumps([asdict(model)for model in step.models]),
-            'connections': json.dumps([asdict(connection)for connection in step.connections]),
+            'models': [asdict(model)for model in step.models],
+            'connections': [asdict(connection)for connection in step.connections],
         }
         connection_documents.append(connection_document)
 
@@ -251,6 +260,10 @@ def add_instruction(name: str, user_id: str,
 
 
 def add_instruction_to_set(set_id, thumbnails):
+    sets3.update_one(
+        {'_id': ObjectId(set_id)},
+        {'$set': {'thumbnail': thumbnails[-1]}}
+    )
     for index, thumbnail in enumerate(thumbnails):
         steps3.update_one(
             {'set_id': ObjectId(set_id), 'step': index},
@@ -259,35 +272,72 @@ def add_instruction_to_set(set_id, thumbnails):
 
 
 def get_instruction(set_id: str):
-    try:
-        object_id = ObjectId(set_id)
-    except Exception as e:
-        print(f"Invalid ObjectId: {e}")
-        return None
+    instruction = steps3.find({'set_id': ObjectId(set_id)}, {'step': 1, 'instruction': 1})
 
-    result = sets3.find_one({'set_id': object_id})
-    if result is None:
-        print(f"No document found for set_id: {set_id}")
-    else:
-        print(result)
-    
+    result = []
+    for step in instruction:
+        result.append({'instruction': step['instruction'], 'step': step['step']})
+
     return result
 
 
-def get_step(set_id: int, step: int):
-    step_result = steps3.find_one({'set_id': set_id, 'step': step})
+def get_step(set_id: str, step: int):
+    steps_results = steps3.find({'set_id': ObjectId(set_id), 'step': {'$lte': step}})
 
-    return step_result.models, step_result.connections
+    models = []
+    connections = []
+
+    # Łączymy modele i połączenia z każdego kroku
+    for step_result in steps_results:
+        models.extend(step_result['models'])  # Dodajemy modele z danego kroku
+        connections.extend(step_result['connections'])  # Dodajemy połączenia z danego kroku
+
+    return models, connections
 
 
 def get_step_models(set_id: int, step: int):
     """
-    Returns models of given step of instruction.
+    Returns models of given step of instruction, including their thumbnails.
     """
-    step_result = steps3.find_one({'set_id': set_id, 'step': step})
-    c = Counter((model['name'], model['color']) for model in step_result.models)
+    step_result = steps3.find_one({'set_id': ObjectId(set_id), 'step': step})
 
-    return [{"name": model[0], "color": model[1], "count": count} for model, count in c.items()], step_result.instruction
+    c = Counter((model['name'], model['color']) for model in step_result['models'])
+
+    result = []
+    for (name, color), count in c.items():
+        model_data = models3.find_one({'model': name}, {"thumbnail": 1})
+        thumbnail = model_data['thumbnail'] if model_data else None
+
+        print(model_data)
+
+        result.append({
+            "model": name,
+            "color": color,
+            "count": count,
+            "thumbnail": thumbnail
+        })
+
+    return result
+
+
+def get_sets(page_index, page_size=10):
+    skip_count = page_index * page_size
+
+    total_count = sets3.count_documents({})
+
+    total_pages = (total_count + page_size - 1) // page_size
+
+    sets = sets3.find({}).skip(skip_count).limit(page_size)
+
+    result = []
+    for set_thumbnails in sets:
+        set_thumbnails['_id'] = str(set_thumbnails['_id'])
+        result.append(set_thumbnails)
+
+    return {
+        "data": result,
+        "total_pages": total_pages
+    }
 
 
 if __name__ == "__main__":

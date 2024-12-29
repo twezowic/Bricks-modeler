@@ -34,8 +34,6 @@ class Model:
              self.middle[2]+self.minimum[2]]
         )
 
-        print(self.map_top)
-
         result_top = [
             point+offset for point in self.map_top
         ]
@@ -143,7 +141,7 @@ def get_models_connection(scene: dict[str, list]):
     Returns dict [model_name: models_names_connected_to_key]
     """
     # słownik model_name -> pojedyńcze połączenie
-    models = check_connection(scene.models)
+    models = check_connection(scene.models if not isinstance(scene, list) else scene)
 
     # TODO może to usprawnić żeby faktycznie korzystało z top i bottom
     coordinate_map = defaultdict(list)
@@ -160,7 +158,7 @@ def get_models_connection(scene: dict[str, list]):
             key = tuple(coord_set)
             coordinate_map[key].append((model_name, int(down)))
 
-    pprint(coordinate_map)
+    # pprint(coordinate_map)
 
     # model_name -> połączonego do niego modele
     graph = defaultdict(set)
@@ -209,7 +207,7 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
     for model in unconnected_models:
         groups.append([(model, 0)])
 
-    print(groups)
+    # print(groups)
 
     return groups
 

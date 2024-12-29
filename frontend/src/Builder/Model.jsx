@@ -2,7 +2,6 @@ import React, { useState, useRef } from 'react';
 import { useSnapshot } from 'valtio';
 import { useGLTF, useCursor } from '@react-three/drei';
 import * as THREE from "three";
-import { useFrame } from '@react-three/fiber';
 import { ip } from '../utils';
 
 const modes = ['translate', 'rotate'];

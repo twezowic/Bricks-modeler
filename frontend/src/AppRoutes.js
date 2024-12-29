@@ -1,6 +1,7 @@
 import Main from "./Builder/Main";
 import Loader from "./Loader";
 import Profile from "./Account/profile";
+import SetsList from "./Explorer/SetsList";
 
 const AppRoutes = [
     {
@@ -14,6 +15,10 @@ const AppRoutes = [
     {
     path: '/profile',
     element: <Profile />
+    },
+    {
+    path: '/sets',
+    element: <SetsList />
     },
 ];
 

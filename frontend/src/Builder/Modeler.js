@@ -6,15 +6,45 @@ import Model from './Model';
 import Ground from './Ground';
 import Controls from './Controls';
 import { GizmoHelper, GizmoViewport } from '@react-three/drei';
-import { proxy, useSnapshot } from 'valtio';
+import { proxy } from 'valtio';
 import { ip } from "../utils"
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth0 } from '@auth0/auth0-react';
 import Renderer from './Renderer';
+import { useSearchParams } from 'react-router-dom';
+import Instruction from './Instruction';
+import SaveDialog from './saveDialog';
 
 const state = proxy({ mode: 0, selected: [] });
 
-export default function Modeler({ color }) {
+export default function Modeler({ color, selectedStep, setSelectedStep }) {
+  const [searchParams] = useSearchParams();
+  const set_id = Object.fromEntries([...searchParams]).set_id
+
+  const [instructions, setInstructions] = useState([]);
+
+  const fetchInstruction = async (setId) => {
+      try {
+          const response = await fetch(`${ip}/instruction/${setId}`, {
+              method: 'GET',
+          });
+          const data = await response.json();
+          setInstructions(data);
+          setSelectedStep(0);
+      } catch (error) {
+          console.error('Error fetching instructions:', error);
+      }
+  };
+
+  useEffect(() => {
+    const setUpReconstruction = async () => {
+      if (set_id){
+        await fetchInstruction(set_id)
+      }
+    };
+    setUpReconstruction();
+  }, []);
+
   const [models, setModels] = useState([]);
   const prevModelsRef = useRef(models);
   const sceneRef = useRef(null);
@@ -27,7 +57,6 @@ export default function Modeler({ color }) {
   const [points, setPoints] = useState([]);
   const [tooglePoints, setTooglePoints] = useState(false);
 
-  const snap = useSnapshot(state);
   const [groups, setGroups] = useState([]);
 
   const location = useLocation();
@@ -47,13 +76,15 @@ export default function Modeler({ color }) {
     loadHistory();
   }, []);
 
-//   useEffect(() => {
-//     const asyncCalculate = async () => {
-//       const result = await checkInstruction();
-//       setCorrectSteps(result);
-//     };
-//     asyncCalculate();
-// }, [models]);
+  useEffect(() => {
+    const asyncCalculate = async () => {
+      if (set_id){
+        const result = await checkInstruction();
+        setCorrectSteps(result);
+      }
+    };
+    asyncCalculate();
+}, [models, selectedStep]);
   
 
   useEffect(() => {
@@ -63,20 +94,13 @@ export default function Modeler({ color }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        saveScene();
-      } else if (event.key === '\\') {
+      if (event.key === '\\') {
         // loadScene();
-        // saveInstructionSteps()
       } else if (event.key === 'Delete') {
         const newModels = models.filter(model => !state.selected.includes(model.name));
         setModels(newModels);
         state.selected = [];
       } 
-      else if (event.key === "k") {
-        // checkInstruction();
-        generateSteps()
-      }
       else if (event.key === 'Shift') {
         setTooglePoints(!tooglePoints);
         if (!tooglePoints){
@@ -118,42 +142,28 @@ export default function Modeler({ color }) {
 
   const handleDrop = async (event) => {
     event.preventDefault();
-    const data = event.dataTransfer.getData('model');
+    const partData = event.dataTransfer.getData('model');
+    const colorData = event.dataTransfer.getData('color');
     
     // if (!data) {
     //   return;
     // }
     
     try {
-      const part = JSON.parse(data);
-      console.log(part)
-      addNewModel(color, part);
+      const part = JSON.parse(partData);
+      if (colorData){
+        const colorPart = JSON.parse(colorData);
+        addNewModel(colorPart, part);
+      }
+      else {
+        addNewModel(color, part);
+      }
     } catch (error) {
       console.error(error);
     }
   };
 
-  const saveInstructionSteps = async () => {
-    try {
-      const response = await fetch(`${ip}/prepare_instruction`, {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ 'models': models })
-      });
-
-      if (!response.ok) {
-          throw new Error('Network response was not ok');
-      }
-
-  } catch (error) {
-      console.error('Error fetching data:', error);
-  }
-  }
-
   const checkInstruction = async () => {
-    const set_id = 0;
     const step = 1;
     try {
         const response = await fetch(`${ip}/instruction/check`, {
@@ -161,7 +171,7 @@ export default function Modeler({ color }) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({'set_id': set_id, 'step': step, 'models': models })
+            body: JSON.stringify({'set_id': set_id, 'step': selectedStep, 'models': models })
         });
 
         if (!response.ok) {
@@ -256,7 +266,7 @@ export default function Modeler({ color }) {
     return [minX - 100, minY - 100, 0];
   };
 
-  const saveScene = async () => {
+  const saveScene = async (name) => {
     const thumbnail = await generateThumbnail();
     // const sceneData = JSON.stringify({ models, thumbnail });
     // var a = document.createElement('a');
@@ -264,25 +274,58 @@ export default function Modeler({ color }) {
     // a.href = window.URL.createObjectURL(blob);
     // a.download = 'scene.json';
     // a.click();
-
     try {
-      const name = "a";
+      const requestBody = {
+        name: name,
+        track: models,
+        thumbnail: thumbnail,
+        user_id: user.sub,
+      };
+    
+      if (set_id) {
+        requestBody.set_id = set_id;
+      }
+    
       const response = await fetch(`${ip}/tracks`, {
-          method: 'POST',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+    
+      if (!response.ok) {
+        throw new Error('Failed to add track');
+      }
+    
+      alert('Track added successfully.');
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to add track.');
+    }    
+  };
+
+  const track_id = Object.fromEntries([...searchParams]).track_id
+
+  const updateTrack = async () => {
+    const thumbnail = await generateThumbnail();
+    try {
+      const response = await fetch(`${ip}/tracks/${track_id}`, {
+          method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 'name': name, 'track': models, 'thumbnail': thumbnail, 'user_id': user.sub })
+          body: JSON.stringify({ 'track': models, 'thumbnail': thumbnail })
       });
 
       if (!response.ok) {
-          throw new Error('Failed to add track');
+          throw new Error('Failed to update track');
       }
 
-      alert('Track added successfully.');
+      alert('Track updated successfully.');
     } catch (error) {
         console.error('Error:', error);
-        alert('Failed to add track.');
+        alert('Failed to update track.');
     }
   };
 
@@ -364,18 +407,18 @@ export default function Modeler({ color }) {
 
   return (
     <div
-    className="float-right w-full h-[80vh] gap-10"
+    className="float-right w-full h-[80vh] gap-10 relative"
     onDrop={handleDrop}
     onDragOver={handleDragOver}
   >
-      {/* <div className={`absolute top-20 right-12 items-center justify-between px-2 flex gap-2 border-2 border-black`}>
-        <div className={`w-8 h-8 rounded-full ${correctSteps ? "bg-green-400" : "bg-red-600"}`}/>
-        <img
-          src={'/instruction_temp.png'}
-          alt={`instruction_temp`}
-          className='w-[200px] h-auto border-l-2 border-black'
+      {set_id && 
+        <Instruction 
+        images={instructions.map(step=>step.instruction)} 
+        correctSteps={correctSteps} 
+        currentStep={selectedStep} 
+        setCurrentStep={setSelectedStep}
         />
-      </div> */}
+      }
       <Canvas camera={{ position: [0, 10, 10], fov: 50 }} onCreated={({ gl, scene, camera }) => {
         glRef.current = gl;
         sceneRef.current = scene;
@@ -383,7 +426,7 @@ export default function Modeler({ color }) {
       }}>
         <directionalLight position={[10, 10, 10]} intensity={1} castShadow />
         <Suspense fallback={null}>
-          <group position={[0, 0.5, 0]} scale={0.05} rotation={[-Math.PI / 2, 0, 0]}>
+          <group position={[0, 0, 0]} scale={0.05} rotation={[-Math.PI / 2, 0, 0]}>
             {models.map((model, index) => (
               <Model
                 key={index}
@@ -413,12 +456,13 @@ export default function Modeler({ color }) {
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport axisColors={['#9d4b4b', '#2f7f4f', '#3b5b9d']} labelColor="white" />
         </GizmoHelper>
-        {/* <RenderToPNG/> */}
       </Canvas>
-      <div>
-
-      <Renderer glRef={glRef} sceneRef={sceneRef} cameraRef={cameraRef} getSteps={generateSteps}/>
-      </div>
+      {isAuthenticated && 
+        <div className='flex flex-row absolute bottom-1 left-1 z-10 gap-1'>
+          <SaveDialog saveTrack={saveScene} updateTrack={updateTrack} trackId={track_id}/>
+          <Renderer glRef={glRef} sceneRef={sceneRef} cameraRef={cameraRef} getSteps={generateSteps}/>
+        </div>
+      }
     </div>
   );
 }

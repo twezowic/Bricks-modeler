@@ -58,37 +58,32 @@ class StepDB:
 
 def get_masks(coords1, coords2):
     # symetrie sprawdzać przez np.rot90(a, n= 1 | 2 | 3 ) to chyba i tak w sprawdzaniu?
-    maska1 = np.zeros(coords1.shape[:2], dtype=bool)
-    maska2 = np.zeros(coords2.shape[:2], dtype=bool)
+    maska1 = np.zeros(coords1.shape[0], dtype=bool)
+    maska2 = np.zeros(coords2.shape[0], dtype=bool)
 
     coords2_flat = coords2.reshape(-1, coords2.shape[-1])
-    for i in range(coords1.shape[0]):
-        for j in range(coords1.shape[1]):
-            punkt = coords1[i, j]
 
-            if any(np.all(punkt == p) for p in coords2_flat):
-                maska1[i, j] = True
+    for i in range(coords1.shape[0]):
+        if any(np.all(coords1[i] == p) for p in coords2_flat):
+            maska1[i] = True
 
     coords1_flat = coords1.reshape(-1, coords1.shape[-1])
-    for i in range(coords2.shape[0]):
-        for j in range(coords2.shape[1]):
-            punkt = coords2[i, j]
 
-            if any(np.all(punkt == p) for p in coords1_flat):
-                maska2[i, j] = True
+    for i in range(coords2.shape[0]):
+        if any(np.all(coords2[i] == p) for p in coords1_flat):
+            maska2[i] = True
 
     return maska1, maska2
 
 
 def prepare_step(scene):
     models, graph = get_models_connection(scene)
-
     instruction_connections = []
     for key, values in graph.items():
         height = key[1]
         for model_name, model_height in values:
             if model_height > height:
-                maska1, maska2 = get_masks(models[key[0]][1], models[model_name][0])
+                maska1, maska2 = get_masks(models[key[0]][0], models[model_name][1])
 
                 flatten_mask_1 = ''.join(maska1.astype(int).astype(str).flatten())
                 flatten_mask_2 = ''.join(maska2.astype(int).astype(str).flatten())
@@ -120,9 +115,11 @@ def compare_instruction_step(scene,
     if len(current_connections) != len(instruction_connections) or \
        len(current_models) != len(instruction_models):
         return False
+    
+    print(instruction_connections)
 
     instruction_db_models = [ModelDB(model['model_id'], model['color'], model['name']) for model in instruction_models]
-    instruction_db_steps = [ConnectionDB(step['up_mask'], step['up_model_id'], step['down_mask'], step['down_model_id']) for step in instruction_connections]
+    instruction_db_steps = [ConnectionDB(connection['up_mask'], connection['up_id'], connection['down_mask'], connection['down_id']) for connection in instruction_connections]
 
     models1 = {model.model_id: model for model in instruction_db_models}
     models2 = {model.model_id: model for model in current_models}
