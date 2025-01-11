@@ -1,7 +1,7 @@
 import Main from "./Builder/Main";
-import Loader from "./Loader";
+import Loader from "./YourSets/Loader";
 import Profile from "./Account/profile";
-import SetsList from "./Explorer/SetsList";
+import SetsList from "./Browse/SetsList";
 
 const AppRoutes = [
     {

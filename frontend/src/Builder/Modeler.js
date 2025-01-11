@@ -137,14 +137,14 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
     };
   });
 
-  async function generateSteps(){
+  async function generateSteps(name){
     try {
         const response = await fetch(`${ip}/instruction/generate`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({'models': models, 'user_id': '1', 'name': '1' })
+            body: JSON.stringify({'models': models, 'user_id': '1', 'name': name})
         });
 
         if (!response.ok) {

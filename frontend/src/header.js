@@ -12,15 +12,14 @@ const Header = () => {
     const { isAuthenticated } = useAuth0();
 
     return (
-      <Box sx={{ flexGrow: 1 }}>
+      <Box>
       <AppBar position="static">
         <Toolbar className="flex flex-row gap-10">
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" component="div">
             BrickBuilder
           </Typography>
             <div className="flex flex-row justify-between w-full">
              <div className="space-x-4">
-             {/* <Link to="/">Home</Link> */}
              <Link to="/">Builder</Link>
              <Link to="/sets">Browse</Link>
              {isAuthenticated && 

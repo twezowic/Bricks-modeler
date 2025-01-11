@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ip } from './utils';
-import './Loader.css';
+import { ip } from '../utils';
 import { useAuth0 } from '@auth0/auth0-react';
 
 function Loader() {
@@ -40,7 +39,7 @@ function Loader() {
   };
 
   return (
-    <div className="thumbnail-viewer">
+    <div className="grid grid-cols-4 gap-2 justify-items-center">
       {thumbnails && 
         thumbnails.map((thumb, index) => (
           <img
@@ -48,7 +47,7 @@ function Loader() {
             src={thumb.thumbnail}
             alt={thumb.name}
             onClick={() => handleThumbnailClick(thumb._id)}
-            className="thumbnail-item"
+            className="w-[400px] h-[400px] rounded object-cover cursor-pointer"
           />
         ))
       }
@@ -56,7 +55,7 @@ function Loader() {
         src="./plus.png"
         alt="Add new model"
         onClick={handleAddNewModel}
-        className="thumbnail-item"
+        className="w-[400px] h-[400px] rounded object-cover cursor-pointer"
       />
     </div>
   );

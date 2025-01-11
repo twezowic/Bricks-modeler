@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ip } from '../utils';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { jsPDF } from 'jspdf';
 
 export default function SetsDisplay() {
     const [sets, setSets] = useState([]);
@@ -63,6 +64,21 @@ export default function SetsDisplay() {
         }
     };
 
+    const saveToPDF = () => {
+        const pdf = new jsPDF('landscape');
+
+        const images = instructions.map(i=>i.instruction)
+
+        images.forEach((image, index) => {
+            if (index != 0){
+                pdf.addPage();
+            }
+            pdf.addImage(image, 'PNG', 60, 30, 180, 160);
+        });
+
+        pdf.save('instruction.pdf')
+    }
+
     useEffect(() => {
         fetchSets();
     }, [pageIndex]);
@@ -105,8 +121,8 @@ export default function SetsDisplay() {
             </div>
 
             <Dialog open={isDialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
-                <DialogTitle>Instructions</DialogTitle>
-                <DialogContent>
+                <DialogTitle>Instruction</DialogTitle>
+                <DialogContent className='flex flex-row gap-10'>
                     {instructions.length > 0 ? (
                         <div>
                             <img
@@ -133,6 +149,9 @@ export default function SetsDisplay() {
                         onClick={()=>(navigate(`/?set_id=${selectedId}`))}
                     >
                         Build
+                    </Button>
+                    <Button onClick={saveToPDF}>
+                        Save to PDF
                     </Button>
                 </DialogActions>
             </Dialog>

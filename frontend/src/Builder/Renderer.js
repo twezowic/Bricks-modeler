@@ -1,9 +1,33 @@
 import * as THREE from 'three'
-import { jsPDF } from 'jspdf';
 import { ip } from '../utils';
 import { Button } from '@mui/material';
+import { useState } from 'react';
+import * as React from 'react';
+import TextField from '@mui/material/TextField';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
 
 export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
+  const [name, setName] = useState("");
+  const [open, setOpen] = React.useState(false);
+
+  const handleClickOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setName('');
+  };
+
+  const handleSave = () => {
+    generateInstruction(name);
+    handleClose();
+  };
+
   async function saveInstruction(instruction, set_id){
     try {
         const response = await fetch(`${ip}/instruction/generate`, {
@@ -71,7 +95,7 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
   const generateInstruction = async () => { 
     const images = [];
 
-    const data = await getSteps();
+    const data = await getSteps(name);
 
     const set_id = data.set_id
 
@@ -107,20 +131,40 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
       const imageData = await generateImage(sceneCopy);
       images.push(imageData);
     }
-
-    // const pdf = new jsPDF('landscape');
-
-    // images.reverse().forEach((image, index) => {
-    //   if (index > 1) pdf.addPage();
-    //   pdf.addImage(image, 'PNG', 60, 30, 180, 160);
-    // });
-
-    // pdf.save('zapisana_instrucja.pdf')
-
     await saveInstruction(images.reverse().splice(1), set_id);
   };
   
   return (
-    <button onClick={generateInstruction} className='px-2 py-2 rounded-[8px] bg-white'>Generate Instruction</button>
+    <React.Fragment>
+    <button className='px-2 py-2 rounded-[8px] bg-white' onClick={handleClickOpen}>
+      Generate Instruction
+    </button>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+    >
+      <DialogTitle>Generate instruction</DialogTitle>
+      <DialogContent>
+        <DialogContentText>
+          Enter a name for your set.
+        </DialogContentText>
+            <TextField
+            autoFocus
+            margin="dense"
+            id="name"
+            label="Track Name"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+        />
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={handleClose} variant={'info'}>Cancel</Button>
+        <Button type="button"onClick={handleSave}>Generate Instruction</Button>
+      </DialogActions>
+    </Dialog>
+  </React.Fragment>
   );
 }

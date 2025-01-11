@@ -10,7 +10,6 @@ function App() {
   useEffect(() => {
     const handleRouteChange = () => {
       const previousUrl = sessionStorage.getItem('currentUrl');
-      console.log(previousUrl)
       if (previousUrl !== '/') {
         sessionStorage.removeItem('models');
       }
