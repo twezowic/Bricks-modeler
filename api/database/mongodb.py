@@ -209,9 +209,9 @@ def get_reviews_for_set(set_id: str):
 
 @dataclass
 class ConnectionDB:
-    up_mask: str
+    up_mask: list
     up_id: str
-    down_mask: str
+    down_mask: list
     down_id: str
 
 

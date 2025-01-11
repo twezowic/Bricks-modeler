@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
 from database.mongodb import get_step
-from pprint import pprint
 import networkx as nx
 from database.connection import get_models_connection
 
@@ -57,23 +56,34 @@ class StepDB:
 
 
 def get_masks(coords1, coords2):
-    # symetrie sprawdzać przez np.rot90(a, n= 1 | 2 | 3 ) to chyba i tak w sprawdzaniu?
-    maska1 = np.zeros(coords1.shape[0], dtype=bool)
-    maska2 = np.zeros(coords2.shape[0], dtype=bool)
+    coords1 = np.array(coords1)
+    coords2 = np.array(coords2)
 
-    coords2_flat = coords2.reshape(-1, coords2.shape[-1])
+    unique_x1, unique_y1 = np.unique(coords1[:, 0]), np.unique(coords1[:, 1])
+    unique_x2, unique_y2 = np.unique(coords2[:, 0]), np.unique(coords2[:, 1])
 
-    for i in range(coords1.shape[0]):
-        if any(np.all(coords1[i] == p) for p in coords2_flat):
-            maska1[i] = True
+    mask1 = np.zeros((len(unique_y1), len(unique_x1)), dtype=int)
+    mask2 = np.zeros((len(unique_y2), len(unique_x2)), dtype=int)
 
-    coords1_flat = coords1.reshape(-1, coords1.shape[-1])
+    # wartość: pozycja w tabeli
+    index_map1_x = {val: idx for idx, val in enumerate(unique_x1)}
+    index_map1_y = {val: idx for idx, val in enumerate(unique_y1)}
+    index_map2_x = {val: idx for idx, val in enumerate(unique_x2)}
+    index_map2_y = {val: idx for idx, val in enumerate(unique_y2)}
 
-    for i in range(coords2.shape[0]):
-        if any(np.all(coords2[i] == p) for p in coords1_flat):
-            maska2[i] = True
+    for coord in coords1:
+        x_idx = index_map1_x[coord[0]]
+        y_idx = index_map1_y[coord[1]]
+        if any(np.all(coord == c) for c in coords2):
+            mask1[y_idx, x_idx] = 1
 
-    return maska1, maska2
+    for coord in coords2:
+        x_idx = index_map2_x[coord[0]]
+        y_idx = index_map2_y[coord[1]]
+        if any(np.all(coord == c) for c in coords1):
+            mask2[y_idx, x_idx] = 1
+
+    return mask1, mask2
 
 
 def prepare_step(scene):
@@ -83,12 +93,8 @@ def prepare_step(scene):
         height = key[1]
         for model_name, model_height in values:
             if model_height > height:
-                maska1, maska2 = get_masks(models[key[0]][0], models[model_name][1])
-
-                flatten_mask_1 = ''.join(maska1.astype(int).astype(str).flatten())
-                flatten_mask_2 = ''.join(maska2.astype(int).astype(str).flatten())
-
-                instruction_connections.append(ConnectionDB(flatten_mask_1, key[0], flatten_mask_2, model_name))
+                mask1, mask2 = get_masks(models[key[0]][0], models[model_name][1])
+                instruction_connections.append(ConnectionDB(mask1.tolist(), key[0], mask2.tolist(), model_name))
     return ModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_connections
 
 
@@ -107,6 +113,28 @@ def _replace_id(steps: list[ConnectionDB], old: str, new: str) -> list[Connectio
             step.up_id = new
 
 
+def is_symmetry(mask1, mask2):
+    mask1_np = np.array(mask1)
+    mask2_np = np.array(mask2)
+
+    is_equal_any_rotation = any(
+        np.array_equal(mask2_np, np.rot90(mask1_np, k)) for k in range(1, 4)
+    )
+
+    return is_equal_any_rotation
+
+
+def compare_masks(instruction_db_steps: list[ConnectionDB], current_connections: list[ConnectionDB]):
+    for con1, con2 in zip(instruction_db_steps, current_connections):
+        if con1.up_mask != con2.up_mask and \
+           not is_symmetry(con1.up_mask, con2.up_mask):
+            return False
+        if con1.down_mask != con2.down_mask and \
+           not is_symmetry(con1.down_mask, con2.down_mask):
+            return False
+    return True
+
+
 def compare_instruction_step(scene,
                              set_id: str, step: int):
     current_models, current_connections = prepare_step(scene)
@@ -116,21 +144,19 @@ def compare_instruction_step(scene,
        len(current_models) != len(instruction_models):
         return False
     
-    print(instruction_connections)
-
     instruction_db_models = [ModelDB(model['model_id'], model['color'], model['name']) for model in instruction_models]
     instruction_db_steps = [ConnectionDB(connection['up_mask'], connection['up_id'], connection['down_mask'], connection['down_id']) for connection in instruction_connections]
 
     models1 = {model.model_id: model for model in instruction_db_models}
     models2 = {model.model_id: model for model in current_models}
 
-    pprint(current_models)
-    print()
-    pprint(current_connections)
-    print()
-    pprint(instruction_db_models)
-    print()
-    pprint(instruction_db_steps)
+    # pprint(current_models)
+    # print()
+    # pprint(current_connections)
+    # print()
+    # pprint(instruction_db_models)
+    # print()
+    # pprint(instruction_db_steps)
 
     G1 = nx.DiGraph()
     edges1 = _prepare_edges(instruction_db_steps)
@@ -151,13 +177,5 @@ def compare_instruction_step(scene,
             _replace_id(current_connections, v2, v1)
     else:
         return False
-    
-    # Sprawdzanie czy maski odpowiadają
-    steps1 = {
-        (step.up_id, step.down_id): step for step in instruction_db_steps
-    }
-    steps2 = {
-        (step.up_id, step.down_id): step for step in current_connections
-    }
 
-    return steps1 == steps2
+    return compare_masks(instruction_db_steps, current_connections)

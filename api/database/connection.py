@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import numpy as np
-from pprint import pprint
 from collections import defaultdict
 
 from database.mongodb import get_model_v3_metadata
@@ -99,7 +98,12 @@ class Model:
             point = points_rotated[i]
             point_rotated = np.dot(rotation_matrix, point - self.middle) \
                 + self.middle
-            points_rotated[i] = point_rotated
+            adjusted_point = np.array([
+                round(point_rotated[0] / (LENGTH / 2)) * (LENGTH / 2),
+                round(point_rotated[1] / (LENGTH / 2)) * (LENGTH / 2),
+                round(point_rotated[2] / HEIGHT) * HEIGHT,
+            ])
+            points_rotated[i] = adjusted_point
 
         return points_rotated.reshape(points.shape)
 

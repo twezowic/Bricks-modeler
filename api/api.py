@@ -43,7 +43,7 @@ class Track(BaseModel):
     track: list
     thumbnail: str
     user_id: str
-    set_id: str
+    set_id: str = None
 
 
 @app.post("/tracks")
