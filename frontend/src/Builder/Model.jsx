@@ -63,8 +63,6 @@ export default function Model({ name, gltfPath, state, color = 'white', groups, 
       geometry={nodes[gltfPath].geometry}
       material={new THREE.MeshPhongMaterial()}
       material-color={color}
-      // material-transparent={true}
-      // material-opacity={0.5}
       material-specular={'#7c71a2'}
       dispose={null}
       {...props}

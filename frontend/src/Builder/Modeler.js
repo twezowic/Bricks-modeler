@@ -54,12 +54,12 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   const [currentlyMoving, setCurrentlyMoving] = useState(false);
   const [correctSteps, setCorrectSteps] = useState(false);
 
+  // Tylko prezentacja miejsce łączeń
   const [points, setPoints] = useState([]);
   const [tooglePoints, setTooglePoints] = useState(false);
+  //
 
   const [groups, setGroups] = useState([]);
-
-  const location = useLocation();
 
   const { user, isAuthenticated } = useAuth0();
 
@@ -114,9 +114,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   // Shortkeys
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === '\\') {
-        // loadScene();
-      } else if (event.key === 'Delete') {
+      if (event.key === 'Delete') {
         const newModels = models.filter(model => !state.selected.includes(model.name));
         setModels(newModels);
         state.selected = [];
@@ -359,22 +357,6 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
       resolve(dataURL);
     });
   };
-
-  // const loadScene = () => {
-  //   const input = document.createElement('input');
-  //   input.type = 'file';
-  //   input.accept = '.json';
-  //   input.onchange = e => {
-  //     const file = e.target.files[0];
-  //     const reader = new FileReader();
-  //     reader.onload = () => {
-  //       const loadedModels = JSON.parse(reader.result)["models"];
-  //       setModels(loadedModels);
-  //     };
-  //     reader.readAsText(file);
-  //   };
-  //   input.click();
-  // };
 
   const getConnection123 = async () => {
     try {
