@@ -142,7 +142,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({'models': models, 'user_id': '1', 'name': name})
+            body: JSON.stringify({'models': models, 'user_id': user.sub, 'name': name})
         });
 
         if (!response.ok) {
