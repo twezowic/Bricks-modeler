@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { ip } from '../utils';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Input } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
+import { useAuth0 } from '@auth0/auth0-react';
 
 export default function SetsDisplay() {
     const [sets, setSets] = useState([]);
@@ -83,6 +84,57 @@ export default function SetsDisplay() {
         fetchSets();
     }, [pageIndex]);
 
+    const [comments, setComments] = useState([]);
+    const [comment, setComment] = useState("");
+    const { user, isAuthenticated } = useAuth0();
+
+    useEffect(() => {
+        fetchComments();
+    }, [selectedId])
+
+    const fetchComments = async () => {
+        try {
+            if (selectedId){
+                const response = await fetch(`${ip}/comment/${selectedId}`);
+                if (response.ok) {
+                  const data = await response.json();
+                  setComments(data);
+                } else {
+                  console.error("Failed to fetch comments");
+                }
+            }
+        } catch (error) {
+          console.error("Error fetching comments:", error);
+        }
+      };
+    
+      const addComment = async () => {
+        const newReview = {
+          set_id: selectedId,
+          comment,
+          user_id: user.nickname,
+        };
+    
+        try {
+          const response = await fetch(`${ip}/comment`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newReview),
+          });
+    
+          if (response.ok) {
+            fetchComments();
+            setComment("");
+          } else {
+            console.error("Failed to add comment");
+          }
+        } catch (error) {
+          console.error("Error adding comment:", error);
+        }
+      };
+
 
     return (
         <div className='flex flex-col justify-center px-[200px] gap-10 text-white text-[24px]'>
@@ -120,21 +172,45 @@ export default function SetsDisplay() {
                 </button>
             </div>
 
-            <Dialog open={isDialogOpen} onClose={closeDialog} fullWidth maxWidth="md">
+            <Dialog open={isDialogOpen} onClose={closeDialog} fullWidth maxWidth="lg">
                 <DialogTitle>Instruction</DialogTitle>
                 <DialogContent className='flex flex-row gap-10'>
-                    {instructions.length > 0 ? (
-                        <div>
-                            <img
-                                src={instructions[currentStep].instruction}
-                                alt={`Step ${currentStep + 1}`}
-                                className="w-full h-auto"
-                            />
-                            <p className="mt-4 text-center">Step {currentStep + 1}</p>
+                    <div className='flex flex-row gap-6'>
+                        {instructions.length > 0 ? (
+                            <div>
+                                <img
+                                    src={instructions[currentStep].instruction}
+                                    alt={`Step ${currentStep + 1}`}
+                                    className="w-full h-auto"
+                                />
+                                <p className="mt-4 text-center">Step {currentStep + 1}</p>
+                            </div>
+                        ) : (
+                            <p>Loading instructions...</p>
+                        )}
+                        <div className='flex flex-col w-[1000px] h-full justify-between'>
+                            <div className='flex flex-col max-h-[400px] h-full overflow-y-scroll p-4 gap-2'>
+                                {comments.map((user_comment, index) => (
+                                    <div key={index} className={`rounded-md p-1 ${user_comment.user_id === user.nickname ? "self-end bg-green-300" : 'self-start bg-cyan-600'}`}>
+                                        <p><strong>{user_comment.user_id}</strong></p>
+                                        <p>{user_comment.comment}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            {isAuthenticated ?
+                                <div className='flex flex-row border rounded-md p-2 w-full justify-between'>
+                                <Input
+                                    value={comment}
+                                    onChange={(e) => setComment(e.target.value)}
+                                    placeholder="Write here..."
+                                    className='w-full'
+                                    />
+                                    <Button onClick={addComment}>Send</Button>
+                                </div> :
+                                <></>
+                            }
                         </div>
-                    ) : (
-                        <p>Loading instructions...</p>
-                    )}
+                    </div>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handlePrevious} disabled={currentStep === 0}>
@@ -158,6 +234,3 @@ export default function SetsDisplay() {
         </div>
     );
 }
-
-
-// TODO ma być opcja filtrowania, zapisu do pdf, pisania i przeglądania komentarzy oraz dawania oceny

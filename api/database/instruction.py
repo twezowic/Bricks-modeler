@@ -1,58 +1,10 @@
-from dataclasses import dataclass
 import numpy as np
 from database.mongodb import get_step
 import networkx as nx
 from database.connection import get_models_connection
-
-
-@dataclass
-class ModelDB:
-    model_id: str
-    color: str
-    name: str
-
-    @staticmethod
-    def from_scene(scene: list[dict]) -> list['ModelDB']:
-        result = []
-        for model in scene:
-            result.append(ModelDB(model['name'],
-                                  model['color'],
-                                  (model['gltfPath'])))
-        return result
-
-    def __eq__(self, value: 'ModelDB'):
-        return all([
-            self.color == value.color,
-            self.name == value.name
-        ])
-
-
-@dataclass
-class ConnectionDB:
-    up_mask: str
-    up_id: str
-    down_mask: str
-    down_id: str
-
-    def __eq__(self, value: 'ConnectionDB'):
-        return all([
-            self.up_mask == value.up_mask,
-            self.up_id == value.up_id,
-            self.down_mask == value.down_mask,
-            self.down_id == value.down_id,
-        ])
-
-    def __hash__(self):
-        return hash((self.up_mask, self.up_id, self.down_mask, self.down_id))
-
-
-@dataclass
-class StepDB:
-    set_id: str
-    step: int
-    thumbnail: str
-    models: list[ModelDB]
-    connections: list[ConnectionDB]
+from database.models import ConnectionDB, ModelDB
+from pprint import pprint
+from matplotlib import pyplot as plt
 
 
 def get_masks(coords1, coords2):
@@ -150,14 +102,6 @@ def compare_instruction_step(scene,
     models1 = {model.model_id: model for model in instruction_db_models}
     models2 = {model.model_id: model for model in current_models}
 
-    # pprint(current_models)
-    # print()
-    # pprint(current_connections)
-    # print()
-    # pprint(instruction_db_models)
-    # print()
-    # pprint(instruction_db_steps)
-
     G1 = nx.DiGraph()
     edges1 = _prepare_edges(instruction_db_steps)
     G1.add_edges_from(edges1)
@@ -170,8 +114,10 @@ def compare_instruction_step(scene,
     if matcher.is_isomorphic():
         mapping = matcher.mapping
         for v1, v2 in mapping.items():
+            print(models1[v1],  '\n', models2[v2], '\n')
             # Sprawdzanie koloru i typu elementu
             if models1[v1] != models2[v2]:
+                # print(models1[v1],  models2[v2])
                 return False
             # Przemiana w obecnych połączeniach id modeli na odpowiadające z instrukcji
             _replace_id(current_connections, v2, v1)

@@ -153,3 +153,20 @@ async def get_connections(models: Scene):
 @app.get("/sets/{page_index}")
 async def get_sets(page_index: int):
     return mongodb.get_sets(page_index)
+
+
+class Review(BaseModel):
+    set_id: str
+    comment: str
+    user_id: str
+
+
+@app.post('/comment')
+async def add_review(review: Review):
+    mongodb.add_comment(review.set_id, review.comment, review.user_id)
+
+
+@app.get('/comment/{set_id}')
+async def get_comments(set_id: str):
+    result = mongodb.get_comments_for_set(set_id)
+    return result

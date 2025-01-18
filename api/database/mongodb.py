@@ -1,13 +1,15 @@
 import base64
 import csv
-from dataclasses import dataclass, asdict
+from dataclasses import asdict
 import json
 from math import ceil, floor
+from pprint import pprint
 from pymongo import MongoClient
 from bson import ObjectId
 import os
 import pandas as pd
 from collections import Counter
+from database.models import StepDB
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['LEGO']
@@ -33,7 +35,7 @@ models3 = db['Models_v3']
 tracks3 = db['Tracks_v3']
 sets3 = db['Sets_v3']
 steps3 = db['Steps_v3']
-reviews3 = db['Reviews_v3']
+comments3 = db['Comments_v3']
 
 
 # ------------------------------------------------------------------------------------
@@ -191,44 +193,19 @@ def update_track(id: str, track, thumbnail):
     )
 
 
-def add_review(set_id: str, comment: str, rating: int, user_id):
+def add_comment(set_id: str, comment: str, user_id):
     model_document = {
         'set_id': set_id,
         'comment': comment,
-        'rating': rating,
         'user_id': user_id,
     }
 
-    reviews3.insert_one(model_document)
+    comments3.insert_one(model_document)
 
 
-def get_reviews_for_set(set_id: str):
-    result = reviews3.find({'set_id': set_id}, {'comment': 1, 'rating': 1, 'user_id': 1})
-    return result
-
-
-@dataclass
-class ConnectionDB:
-    up_mask: list
-    up_id: str
-    down_mask: list
-    down_id: str
-
-
-@dataclass
-class ModelDB:
-    model_id: str
-    color: str
-    name: str
-
-
-@dataclass
-class StepDB:
-    set_id: str
-    step: int
-    thumbnail: str
-    models: list[ModelDB]
-    connections: list[ConnectionDB]
+def get_comments_for_set(set_id: str):
+    result = comments3.find({'set_id': set_id}, {'comment': 1, 'rating': 1, 'user_id': 1, '_id': 0})
+    return list(result)
 
 
 def add_instruction(name: str, user_id: str,
@@ -241,8 +218,6 @@ def add_instruction(name: str, user_id: str,
     set_inserted = sets3.insert_one(model_document)
 
     connection_documents = []
-
-    steps.reverse()
 
     for index, step in enumerate(steps):
         connection_document = {
