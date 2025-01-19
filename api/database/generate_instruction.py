@@ -38,14 +38,15 @@ def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
             )
 
             if save_step or len(current_step['models']) >= max_models_in_step:
+                models_to_add = current_step['models'][:max_models_in_step]
                 filtered_connections = [
                         connection for connection in current_step['connection']
-                        if any(connection.down_id == model.model_id for model in current_step['models'])
+                        if any(connection.down_id == model.model_id for model in models_to_add)
                     ]
 
                 steps.append(StepDB(
                     step=step_number,
-                    models=current_step['models'][:max_models_in_step],
+                    models=models_to_add,
                     connections=filtered_connections
                 ))
                 step_number += 1

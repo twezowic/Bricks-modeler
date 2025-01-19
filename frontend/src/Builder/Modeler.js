@@ -462,7 +462,9 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
       {isAuthenticated && 
         <div className='flex flex-row absolute bottom-1 left-1 z-10 gap-1'>
           <SaveDialog saveTrack={saveScene} updateTrack={updateTrack} trackId={track_id}/>
-          <Renderer glRef={glRef} sceneRef={sceneRef} cameraRef={cameraRef} getSteps={generateSteps}/>
+          {!set_id &&
+             <Renderer glRef={glRef} sceneRef={sceneRef} cameraRef={cameraRef} getSteps={generateSteps}/>
+          } 
         </div>
       }
     </div>

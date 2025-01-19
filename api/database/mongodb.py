@@ -315,6 +315,17 @@ def get_sets(page_index, page_size=10):
     }
 
 
+def get_sets_from_user(user_id: str):
+    sets = sets3.find({'user_id': user_id})
+
+    result = []
+    for set_thumbnails in sets:
+        set_thumbnails['_id'] = str(set_thumbnails['_id'])
+        result.append(set_thumbnails)
+
+    return result
+
+
 if __name__ == "__main__":
     print(_max_values())
     # add_models_v3()

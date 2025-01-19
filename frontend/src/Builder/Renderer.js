@@ -97,6 +97,8 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
 
     const data = await getSteps(name);
 
+    console.log(data)
+
     const set_id = data.set_id
 
     console.log(set_id)
