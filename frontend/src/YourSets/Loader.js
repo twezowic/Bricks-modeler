@@ -31,6 +31,7 @@ function Loader() {
 
     const url = trackData.set_id ? `/?track_id=${model_id}&set_id=${trackData.set_id}`: `/?track_id=${model_id}`
     localStorage.setItem('models', JSON.stringify(trackData.track));
+    localStorage.setItem('step', JSON.stringify(trackData.step))
     navigate(url);
   };
 

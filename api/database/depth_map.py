@@ -40,8 +40,8 @@ def calculate_z(x, y, A, B, C):
     a, b, c = normal
     d = -np.dot(normal, A)
 
-    if c == 0:  # represent as line
-        return max([A[2], B[2], C[2]])
+    if c == 0:  # równoległe do osi Z
+        return None
 
     return -(a * x + b * y + d) / c
 
@@ -49,6 +49,7 @@ def calculate_z(x, y, A, B, C):
 def is_circle(contour):
     _, radius = cv2.minEnclosingCircle(contour)
     _, _, w, h = cv2.boundingRect(contour)
+    print(radius)
 
     aspect_ratio = w / h
 
@@ -190,7 +191,8 @@ def depth_map_top(file_num: int, generate_images=False):
         for x in range(min_x, max_x + 1):
             for y in range(min_y, max_y + 1):
                 if is_point_in_triangle(x, y, p1, p2, p3):
-                    depth_map[y, x] = max(depth_map[y, x], calculate_z(x, y, p1, p2, p3))
+                    if z := calculate_z(x, y, p1, p2, p3):
+                        depth_map[y, x] = max(depth_map[y, x], z)
 
     # normalizacja mapy
     depth_map[np.isinf(depth_map)] = 0
@@ -198,20 +200,17 @@ def depth_map_top(file_num: int, generate_images=False):
 
     depth_map_normalized = depth_map_normalized.astype(np.uint8)
 
-    # do sprawdzenia czy to potrzebne po skalowaniu?
-    equalized_image = cv2.equalizeHist(depth_map_normalized)
+    # jednak nie potrzebne
+    # equalized_image = cv2.equalizeHist(depth_map_normalized)
 
     # # zwiększenie kontrastu
-    sobelx = cv2.Sobel(equalized_image, cv2.CV_64F, 1, 0, ksize=5)
-    sobely = cv2.Sobel(equalized_image, cv2.CV_64F, 0, 1, ksize=5)
+    sobelx = cv2.Sobel(depth_map_normalized, cv2.CV_64F, 1, 0, ksize=5)
+    sobely = cv2.Sobel(depth_map_normalized, cv2.CV_64F, 0, 1, ksize=5)
 
     gradient_magnitude = cv2.magnitude(sobelx, sobely)
 
     gradient_magnitude_normalized = cv2.normalize(gradient_magnitude, None, 0, 255, cv2.NORM_MINMAX)
     gradient_magnitude_normalized = gradient_magnitude_normalized.astype(np.uint8)
-    # do usunięcia
-    # _, binary_image = cv2.threshold(gradient_magnitude_normalized, 100, 255, cv2.THRESH_BINARY)
-    # binary_image = cv2.Canny(gradient_magnitude_normalized, 50, 150)
 
     if generate_images:
         output_image = cv2.cvtColor(depth_map_normalized.astype(np.uint8), cv2.COLOR_GRAY2BGR)
@@ -222,7 +221,6 @@ def depth_map_top(file_num: int, generate_images=False):
     contours, _ = cv2.findContours(gradient_magnitude_normalized,
                                    cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
-
         if is_circle(contour):
             (x, y), _ = cv2.minEnclosingCircle(contour) 
             if generate_images:
@@ -270,4 +268,4 @@ def generate_top_bottom_insets(file_num: str):
         writer.writerows(top)
 
 
-generate()
+# generate()

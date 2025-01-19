@@ -87,7 +87,7 @@ export default function Explorer({ setColorModel, selectedStep }) {
   }, [filterValue, selectedCategory, size, selectedStep]);
 
   const partElements = parts.map((part, index) => (
-    <li key={part.model} className='mr-[10px]'>
+    <li key={index} className='mr-[10px]'>
       <Part
         imageUrl={part.thumbnail ?? ""}
         name={part.model}

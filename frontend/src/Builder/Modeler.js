@@ -30,7 +30,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
           });
           const data = await response.json();
           setInstructions(data);
-          setSelectedStep(0);
+          // setSelectedStep(0);
       } catch (error) {
           console.error('Error fetching instructions:', error);
       }
@@ -68,6 +68,8 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
     const loadHistory = async () => {
       let savedModels = sessionStorage.getItem('models');
       const modelsFromLoader = localStorage.getItem('models');
+      const stepFromLoader = parseInt(localStorage.getItem('step'));
+      setSelectedStep(stepFromLoader ? stepFromLoader : 0)
 
       if (modelsFromLoader){
         savedModels = modelsFromLoader;
@@ -182,7 +184,6 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   };
 
   const checkInstruction = async () => {
-    const step = 1;
     try {
         const response = await fetch(`${ip}/instruction/check`, {
             method: 'POST',
@@ -302,6 +303,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
     
       if (set_id) {
         requestBody.set_id = set_id;
+        requestBody.step = selectedStep;
       }
     
       const response = await fetch(`${ip}/tracks`, {
@@ -328,12 +330,21 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   const updateTrack = async () => {
     const thumbnail = await generateThumbnail();
     try {
+      const requestBody = {
+        track: models,
+        thumbnail: thumbnail
+      };
+    
+      if (set_id) {
+        requestBody.step = selectedStep;
+      }
+
       const response = await fetch(`${ip}/tracks/${track_id}`, {
           method: 'PUT',
           headers: {
               'Content-Type': 'application/json'
           },
-          body: JSON.stringify({ 'track': models, 'thumbnail': thumbnail })
+          body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {

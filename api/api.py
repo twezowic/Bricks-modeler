@@ -44,13 +44,14 @@ class Track(BaseModel):
     thumbnail: str
     user_id: str
     set_id: str = None
+    step: int = None
 
 
 @app.post("/tracks")
 async def save_track(track: Track):
     try:
         mongodb.add_track_v3(track.name, track.track,
-                             track.thumbnail, track.user_id, track.set_id)
+                             track.thumbnail, track.user_id, track.set_id, track.step)
         return {"message": "Track added successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -74,11 +75,12 @@ async def get_track(track_id: str):
 class Track(BaseModel):
     track: list
     thumbnail: str
+    step: int = None
 
 
 @app.put("/tracks/{track_id}")
 async def update_track(track_id: str, track: Track):
-    mongodb.update_track(track_id, track.track, track.thumbnail)
+    mongodb.update_track(track_id, track.track, track.thumbnail, track.step)
 
 
 class Scene(BaseModel):
@@ -148,6 +150,11 @@ class Scene(BaseModel):
 @app.post('/connection123')
 async def get_connections(models: Scene):
     return connection_for_api(models)
+
+
+@app.get("/sets")
+async def get_sets_from_user(user_id: str):
+    return mongodb.get_sets_from_user(user_id)
 
 
 @app.get("/sets/{page_index}")

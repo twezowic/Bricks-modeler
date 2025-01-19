@@ -159,7 +159,7 @@ def get_thumbnails_v3(name: str = "", category: str = "",
 
 # Tracks
 def add_track_v3(name: str, track, thumbnail,
-                 user_id: str, set_id: str = None):
+                 user_id: str, set_id: str = None, step: int = None):
     model_document = {
         'name': name,
         'track': track,
@@ -169,6 +169,7 @@ def add_track_v3(name: str, track, thumbnail,
 
     if set_id is not None:
         model_document['set_id'] = set_id
+        model_document['step'] = step
 
     tracks3.insert_one(model_document)
 
@@ -183,13 +184,18 @@ def get_all_tracks_v3(user_id):
 
 
 def get_track_v3(id: str):
-    return tracks3.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0, 'set_id': 1})
+    return tracks3.find_one({'_id': ObjectId(id)}, {'track': 1, '_id': 0, 'set_id': 1, 'step': 1})
 
 
-def update_track(id: str, track, thumbnail):
+def update_track(id: str, track, thumbnail, step):
+    updated_fields = {'track': track, 'thumbnail': thumbnail}
+
+    if step is not None:
+        updated_fields['step'] = step
+
     tracks3.update_one(
         {'_id': ObjectId(id)},
-        {'$set': {'track': track, 'thumbnail': thumbnail}}
+        {'$set': updated_fields}
     )
 
 
