@@ -20,7 +20,8 @@ def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
 
     # Stopnie wejściowe wierzchołków
     in_degree = {node: graph.in_degree(node) for node in graph.nodes}
-    zero_in_degree = [node for node, degree in in_degree.items() if degree == 0]
+    zero_in_degree = [node for node, degree in in_degree.items()
+                      if degree == 0]
 
     while zero_in_degree:
         current = zero_in_degree.pop(0)

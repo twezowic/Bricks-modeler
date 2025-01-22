@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from pprint import pprint
 import numpy as np
 from collections import defaultdict
 
@@ -145,7 +146,7 @@ def get_models_connection(scene: dict[str, list]):
     Returns dict [model_name: models_names_connected_to_key]
     """
     # słownik model_name -> pojedyńcze połączenie
-    models = check_connection(scene.models if not isinstance(scene, list) else scene)
+    models = check_connection(scene)
 
     coordinate_map = defaultdict(list)
 
@@ -156,10 +157,9 @@ def get_models_connection(scene: dict[str, list]):
             coordinates = coordinates[0]
         else:
             coordinates = coordinates[1]
-        down = np.min(coordinates[:, 2])
         for coord_set in coordinates.reshape(-1, 3):
             key = tuple(coord_set)
-            coordinate_map[key].append((model_name, int(down)))
+            coordinate_map[key].append(model_name)
 
     # pprint(coordinate_map)
 
@@ -169,15 +169,42 @@ def get_models_connection(scene: dict[str, list]):
     for models_with_same_coords in coordinate_map.values():
         for i in range(len(models_with_same_coords)):
             for j in range(i + 1, len(models_with_same_coords)):
-                graph[models_with_same_coords[i]].add(
-                    models_with_same_coords[j])
-                graph[models_with_same_coords[j]].add(
-                    models_with_same_coords[i])
+                if models_with_same_coords[j]:
+                    graph[models_with_same_coords[i]].add(
+                        models_with_same_coords[j])
 
     return models, graph
 
 
-def find_connected_groups(scene) -> list[tuple[str, int]]:
+def separate_group(group_to_split, graph, seperated_by: str):
+    lower_group = set()
+    upper_group = set()
+
+    def split_group(node, is_upper):
+        if node in lower_group or node in upper_group:
+            return
+        if is_upper:
+            upper_group.add(node)
+        else:
+            lower_group.add(node)
+        pprint(graph[node])
+        for neighbor in graph[node]:
+            split_group(neighbor, is_upper or node == seperated_by)
+
+    split_group(seperated_by, True)
+    down_result = list(set(group_to_split) - upper_group)
+
+    # ustawienie wybranego na pierwszą pozycję bo set jest szybszy w operacji ale nie zachowuje kolejności
+    up_result = list(upper_group)
+    temp = up_result[0]
+    index_seperator = up_result.index(seperated_by)
+    up_result[0] = seperated_by
+    up_result[index_seperator] = temp
+
+    return up_result, down_result
+
+
+def find_connected_groups(scene, separated_by=None) -> list[tuple[str, int]]:
     models, graph = get_models_connection(scene)
 
     # Depth first-search
@@ -197,26 +224,36 @@ def find_connected_groups(scene) -> list[tuple[str, int]]:
 
     visited = set()
     groups = []
+    group_to_split = None
 
-    for model in graph:
+    for model in list(graph):
         if model not in visited:
             group = dfs(model, visited)
-            groups.append(group)
+            if separated_by in group:
+                group_to_split = group
+            else:
+                groups.append(group)
 
     # dodaje modele nie połączone
     all_model_names = {model_name for model_name in models.keys()}
     unconnected_models = all_model_names - set(
-        model for model, _ in graph.keys())
+        model for model in graph.keys())
     for model in unconnected_models:
-        groups.append([(model, 0)])
+        groups.append([model])
+  
+    if separated_by and group_to_split:
+        up, down = separate_group(group_to_split, graph, separated_by)
+        groups.append(up)
+        groups.append(down)
+    elif group_to_split:
+        groups.append(group_to_split)
 
-    # print(groups)
+    print(separated_by, groups)
 
     return groups
 
 
-# TODO temporary to delete only showing insets positions
-def connection_for_api(scene) -> dict:
+def connection_points(scene) -> dict:
     points = check_connection(scene.models)
 
     result = []

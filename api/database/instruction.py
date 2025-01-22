@@ -40,11 +40,9 @@ def prepare_step(scene):
     models, graph = get_models_connection(scene)
     instruction_connections = []
     for key, values in graph.items():
-        height = key[1]
-        for model_name, model_height in values:
-            if model_height > height:
-                mask1, mask2 = get_masks(models[key[0]][0], models[model_name][1])
-                instruction_connections.append(ConnectionDB(mask1.tolist(), key[0], mask2.tolist(), model_name))
+        for model_name in values:
+            mask1, mask2 = get_masks(models[key][0], models[model_name][1])
+            instruction_connections.append(ConnectionDB(mask1.tolist(), key, mask2.tolist(), model_name))
     return ModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_connections
 
 
@@ -99,6 +97,8 @@ def compare_masks(instruction_db_steps: list[ConnectionDB],
 def compare_instruction_step(scene, set_id: str, step: int):
     current_models, current_connections = prepare_step(scene)
     instruction_models, instruction_connections = get_step(set_id, step)
+
+    print(len(current_connections), len(instruction_connections), len(current_models), len(instruction_models))
 
     if len(current_connections) != len(instruction_connections) or \
        len(current_models) != len(instruction_models):

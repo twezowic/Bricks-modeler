@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import database.mongodb as mongodb
-from database.connection import find_connected_groups, connection_for_api
+from database.connection import find_connected_groups, connection_points
 import json
 from database.instruction import prepare_step, compare_instruction_step
 from database.generate_instruction import generate_stepdb
@@ -86,11 +86,12 @@ async def update_track(track_id: str, track: Track):
 
 class Scene(BaseModel):
     models: list
+    seperate_by: str = None
 
 
 @app.post('/connection')
-async def get_connections2(models: Scene):
-    result = find_connected_groups(models)
+async def get_connections2(scene: Scene):
+    result = find_connected_groups(scene.models, scene.seperate_by)
 
     return result
 
@@ -142,15 +143,13 @@ async def get_instruction(set_id: str):
     return mongodb.get_instruction(set_id)
 
 
-# TODO delete
-
 class Scene(BaseModel):
     models: list
 
 
 @app.post('/connection123')
 async def get_connections(models: Scene):
-    return connection_for_api(models)
+    return connection_points(models)
 
 
 @app.get("/sets")

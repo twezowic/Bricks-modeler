@@ -60,6 +60,18 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
   //
 
   const [groups, setGroups] = useState([]);
+  const [seperateBy, setSeperateBy] = useState(undefined);
+
+  useEffect(()=> {
+    const selectSeperated = async () => {
+      if (seperateBy) {
+        const data = await getConnection()
+        state.selected = data.find(group => group.includes(seperateBy));
+        setSeperateBy(undefined)
+      }
+    }
+    selectSeperated()
+  }, [seperateBy])
 
   const { user, isAuthenticated } = useAuth0();
 
@@ -213,12 +225,16 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
 
   const getConnection = async (currentModels=models) => {
     try {
+        const requestBody = { 'models': currentModels }
+        if (seperateBy){
+          requestBody['seperate_by'] = seperateBy
+        }
         const response = await fetch(`${ip}/connection`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ 'models': currentModels })
+            body: JSON.stringify(requestBody)
         });
 
         if (!response.ok) {
@@ -227,6 +243,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
 
         const data = await response.json();
         setGroups(data);
+        return data;
 
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -451,6 +468,9 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
                 color={model.color}
                 groups={groups}
                 currentlyMoving={currentlyMoving}
+                seperateBy={seperateBy}
+                setSeperateBy={setSeperateBy}
+                getConnection={getConnection}
               />
             ))}
             {tooglePoints &&
@@ -465,6 +485,7 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
           setCurrentlyMoving={setCurrentlyMoving} 
           models={models}
           setModels={setModels}
+          seperateBy={seperateBy}
         />
         <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
           <GizmoViewport axisColors={['#9d4b4b', '#2f7f4f', '#3b5b9d']} labelColor="white" />
