@@ -270,8 +270,8 @@ def get_step(set_id: str, step: int):
 
     # Łączymy modele i połączenia z każdego kroku
     for step_result in steps_results:
-        models.extend(step_result['models'])  # Dodajemy modele z danego kroku
-        connections.extend(step_result['connections'])  # Dodajemy połączenia z danego kroku
+        models.extend(step_result['models'])
+        connections.extend(step_result['connections'])
 
     return models, connections
 

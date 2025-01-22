@@ -145,7 +145,7 @@ def get_models_connection(scene: dict[str, list]):
     """
     Returns dict [model_name: models_names_connected_to_key]
     """
-    # słownik model_name -> pojedyńcze połączenie
+    # słownik model_name -> jego połączenia
     models = check_connection(scene)
 
     coordinate_map = defaultdict(list)
@@ -163,7 +163,7 @@ def get_models_connection(scene: dict[str, list]):
 
     # pprint(coordinate_map)
 
-    # model_name -> połączonego do niego modele
+    # model_name -> połączone do niego modele
     graph = defaultdict(set)
 
     for models_with_same_coords in coordinate_map.values():
@@ -240,15 +240,13 @@ def find_connected_groups(scene, separated_by=None) -> list[tuple[str, int]]:
         model for model in graph.keys())
     for model in unconnected_models:
         groups.append([model])
-  
+
     if separated_by and group_to_split:
         up, down = separate_group(group_to_split, graph, separated_by)
         groups.append(up)
         groups.append(down)
     elif group_to_split:
         groups.append(group_to_split)
-
-    print(separated_by, groups)
 
     return groups
 

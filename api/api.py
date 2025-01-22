@@ -99,11 +99,12 @@ async def get_connections2(scene: Scene):
 class SceneInstruction(Scene):
     name: str
     user_id: str
+    models: list
 
 
 @app.post('/instruction/generate')
 async def generate_instruction(scene: SceneInstruction):
-    models, connections = prepare_step(scene)
+    models, connections = prepare_step(scene.models)
     steps = generate_stepdb(models, connections)
     set_id = mongodb.add_instruction(scene.name, scene.user_id, steps)
     return {"steps": steps, "set_id": set_id}

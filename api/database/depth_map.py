@@ -58,8 +58,6 @@ def is_circle(contour):
         20 <= radius <= 40
     )
 
-
-# później brane z bazy danych ma być tylko min i max bo tutaj inaczej zaokrąglam ceil zamiast floor
 def get_size(file_name: str):
     with open(file_name) as fh:
         model = json.loads(fh.read())
@@ -118,6 +116,7 @@ def depth_map_bottom(file_num: int, generate_images=False):
     if len(contours) > 0:
         largest_contour = max(contours, key=cv2.contourArea)
 
+        # przesunięcie gdy istnieją specjalne fragmenty częsci
         min_x, min_y = 0, 0
         if (offset := width % 20) != 0:
             min_x = offset
@@ -125,7 +124,6 @@ def depth_map_bottom(file_num: int, generate_images=False):
         if (offset := height % 20) != 0:
             min_y = offset
         
-
         possible_insets = []
         for x in range(10+min_x, width, 20):
             for y in range(10+min_y, height, 20):
