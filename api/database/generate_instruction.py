@@ -5,7 +5,6 @@ import networkx as nx
 
 def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
                     max_models_in_step: int = 3) -> List[StepDB]:
-    # Uzupełnienie grafu skierowanego
     graph = nx.DiGraph()
 
     for model in models:
@@ -16,47 +15,39 @@ def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
 
     steps = []
     step_number = 0
-    current_step = {'models': [], 'connection': []}
-    save_step = False  # służy do wymuszenia zapisania kroku
+    current_models = []
+    current_connections = []
 
-    while graph:
-        bottom_models = [node for node in graph.nodes if graph.in_degree(node) == 0]
-        if len(bottom_models) == len(graph.nodes):  
-            save_step = True 
-        for i in range(0, len(bottom_models), max_models_in_step):
-            batch_models = bottom_models[i:i + max_models_in_step]
+    # Stopnie wejściowe wierzchołków
+    in_degree = {node: graph.in_degree(node) for node in graph.nodes}
+    zero_in_degree = [node for node, degree in in_degree.items() if degree == 0]
 
-            current_step['connection'].extend(
-                [graph.edges[edge]["connection"]
-                 for edge in graph.edges 
-                 if edge[0] in batch_models or edge[1] in batch_models
-                 ]
-            )
+    while zero_in_degree:
+        current = zero_in_degree.pop(0)
+        current_models.append(graph.nodes[current]['model'])
 
-            current_step['models'].extend(
-                [graph.nodes[model_id]["model"] for model_id in batch_models]
-            )
+        current_connections.extend([
+            conn for conn in connections
+            if conn.down_id == current
+        ])
 
-            if save_step or len(current_step['models']) >= max_models_in_step:
-                models_to_add = current_step['models'][:max_models_in_step]
-                filtered_connections = [
-                        connection for connection in current_step['connection']
-                        if any(connection.down_id == model.model_id for model in models_to_add)
-                    ]
+        # Aktualizacja grafu
+        for neighbor in list(graph.successors(current)):
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                zero_in_degree.append(neighbor)
 
-                steps.append(StepDB(
-                    step=step_number,
-                    models=models_to_add,
-                    connections=filtered_connections
-                ))
-                step_number += 1
-                current_step['models'] = current_step['models'][max_models_in_step:]
-                current_step['connection'] = [connection for connection in current_step['connection']
-                                              if connection not in filtered_connections]
-                save_step = False
-            else:
-                save_step = True
+        graph.remove_node(current)
 
-            #  Usuwanie przetworzonych modeli z grafu
-            graph.remove_nodes_from(batch_models)
+        # Zapisz krok gdy równy max lub nie ma więcej do dodania
+        if len(current_models) == max_models_in_step or not zero_in_degree:
+            steps.append(StepDB(
+                step=step_number,
+                models=current_models,
+                connections=current_connections
+            ))
+            step_number += 1
+            current_models = []
+            current_connections = []
+
     return steps
