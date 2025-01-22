@@ -14,7 +14,6 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
   const { scene, camera, gl } = useThree();
   const transformControls = useRef();
   const initialTransforms = useRef({});
-  const [isMovingDisabled, setMovingDisabled] = useState(false);
 
   function roundPosition(object) {
       if (object.rotation.x === Math.PI / 2 || object.rotation.x === -Math.PI / 2) {
@@ -66,7 +65,7 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
         const deltaZ = mainObject.position.z - initialTransforms.current[mainObject.name].position.z;
 
         const deltaRotZ = mainObject.rotation.z - initialTransforms.current[mainObject.name].rotation.z;
-
+        
         roundPosition(mainObject);
 
         snap.selected.forEach((name) => {
@@ -76,20 +75,16 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
             object.position.x = initialTransforms.current[name].position.x + deltaX;
             object.position.y = initialTransforms.current[name].position.y + deltaY;
             object.position.z = initialTransforms.current[name].position.z + deltaZ;
-
+            
             object.rotation.z = initialTransforms.current[name].rotation.z + deltaRotZ;
-
-            if (deltaRotZ) {
-              const rotated = rotatePoint3D(
-                mainObject.position, 
-                object.position, 
-                Math.round(object.rotation.z / rotationStep) * rotationStep
-              )
-
-              object.position.x = rotated.x;
-              object.position.y = rotated.y;
-              object.position.z = rotated.z;
-            }
+            const rotated = rotatePoint3D(
+              mainObject.position, 
+              object.position, 
+              Math.round(deltaRotZ / rotationStep) * rotationStep
+            )
+            object.position.x = rotated.x;
+            object.position.y = rotated.y;
+            object.position.z = rotated.z;
 
             roundPosition(object);
           }
@@ -97,8 +92,6 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
       };
 
       const onFinishMove = async () => {
-        setMovingDisabled(true);
-
         const updatedModels = models.map((model) => {
           if (snap.selected.includes(model.name)) {
             const object = scene.getObjectByName(model.name);
@@ -123,7 +116,6 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
         } catch (error) {
           console.error("Error fetching groups:", error);
         } finally {
-          setMovingDisabled(false);
           setCurrentlyMoving(false);
         }
       };
@@ -160,7 +152,7 @@ export default function Controls({ state, getConnection, setCurrentlyMoving, mod
 
   return (
     <>
-      {snap.selected.length > 0 && !isMovingDisabled && (
+      {snap.selected.length > 0 && (
         <TransformControls
           ref={transformControls}
           object={scene.getObjectByName(snap.selected[0])}
