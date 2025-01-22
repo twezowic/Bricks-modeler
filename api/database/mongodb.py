@@ -289,8 +289,6 @@ def get_step_models(set_id: int, step: int):
         model_data = models3.find_one({'model': name}, {"thumbnail": 1})
         thumbnail = model_data['thumbnail'] if model_data else None
 
-        print(model_data)
-
         result.append({
             "model": name,
             "color": color,

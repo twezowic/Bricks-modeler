@@ -51,7 +51,8 @@ class Track(BaseModel):
 async def save_track(track: Track):
     try:
         mongodb.add_track_v3(track.name, track.track,
-                             track.thumbnail, track.user_id, track.set_id, track.step)
+                             track.thumbnail, track.user_id,
+                             track.set_id, track.step)
         return {"message": "Track added successfully."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

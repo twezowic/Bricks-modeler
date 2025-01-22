@@ -3,8 +3,6 @@ from database.mongodb import get_step
 import networkx as nx
 from database.connection import get_models_connection
 from database.models import ConnectionDB, ModelDB
-from pprint import pprint
-from matplotlib import pyplot as plt
 
 
 def get_masks(coords1, coords2):
@@ -57,7 +55,7 @@ def _prepare_edges(steps: list[ConnectionDB]):
     return edges
 
 
-def _replace_id(steps: list[ConnectionDB], old: str, new: str) -> list[ConnectionDB]:
+def _replace_id(steps: list[ConnectionDB], old: str, new: str):
     for step in steps:
         if step.down_id == old:
             step.down_id = new
@@ -76,8 +74,9 @@ def is_symmetry(mask1, mask2):
     return is_equal_any_rotation
 
 
-def compare_masks(instruction_db_steps: list[ConnectionDB], current_connections: list[ConnectionDB]):
-    def matches(con1, con2):
+def compare_masks(instruction_db_steps: list[ConnectionDB],
+                  current_connections: list[ConnectionDB]) -> bool:
+    def matches(con1: ConnectionDB, con2: ConnectionDB):
         return (
             (con1.up_mask == con2.up_mask or is_symmetry(con1.up_mask, con2.up_mask)) and
             (con1.down_mask == con2.down_mask or is_symmetry(con1.down_mask, con2.down_mask)) and
@@ -104,11 +103,16 @@ def compare_instruction_step(scene, set_id: str, step: int):
     if len(current_connections) != len(instruction_connections) or \
        len(current_models) != len(instruction_models):
         return False
-    instruction_models = [ModelDB(model['model_id'], model['color'], model['name']) for model in instruction_models]
-    instruction_connections = [ConnectionDB(connection['up_mask'], connection['up_id'], connection['down_mask'], connection['down_id']) for connection in instruction_connections]
 
-    # models1 = {model.model_id: model for model in instruction_models}
-    # models2 = {model.model_id: model for model in current_models}
+    instruction_models = [ModelDB(model['model_id'],
+                                  model['color'],
+                                  model['name'])
+                          for model in instruction_models]
+    instruction_connections = [ConnectionDB(connection['up_mask'],
+                                            connection['up_id'],
+                                            connection['down_mask'],
+                                            connection['down_id'])
+                               for connection in instruction_connections]
 
     def node_matcher(node1, node2):
         return (

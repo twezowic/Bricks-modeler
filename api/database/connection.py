@@ -135,7 +135,7 @@ def check_connection(models: list[dict]) -> dict[str, list]:
     points = defaultdict(list)
     for model in Model.from_json(models):
         top, bot = model.get_insertions()
-        if top is not None or bot is not None:  # TODO check if needed
+        if top is not None or bot is not None:
             points[model.name] = [top, bot]
     return points
 
@@ -147,7 +147,6 @@ def get_models_connection(scene: dict[str, list]):
     # słownik model_name -> pojedyńcze połączenie
     models = check_connection(scene.models if not isinstance(scene, list) else scene)
 
-    # TODO może to usprawnić żeby faktycznie korzystało z top i bottom
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models.items():
