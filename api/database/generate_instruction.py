@@ -4,7 +4,8 @@ import networkx as nx
 
 
 def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
-                    max_models_in_step: int = 3) -> List[StepDB]:
+                    max_models_in_step: int = 3,) -> List[StepDB]:
+    # Tworzenie grafu skierowanego z modeli i połączeń
     graph = nx.DiGraph()
 
     for model in models:

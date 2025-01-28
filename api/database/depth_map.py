@@ -49,13 +49,12 @@ def calculate_z(x, y, A, B, C):
 def is_circle(contour):
     _, radius = cv2.minEnclosingCircle(contour)
     _, _, w, h = cv2.boundingRect(contour)
-    print(radius)
 
     aspect_ratio = w / h
 
     return (
         0.8 <= aspect_ratio <= 1.2 and
-        20 <= radius <= 40
+        20 <= radius <= 30
     )
 
 def get_size(file_name: str):
@@ -118,15 +117,15 @@ def depth_map_bottom(file_num: int, generate_images=False):
 
         # przesunięcie gdy istnieją specjalne fragmenty częsci
         min_x, min_y = 0, 0
-        if (offset := width % 20) != 0:
+        if (offset := width % 80) != 0:
             min_x = offset
-    
-        if (offset := height % 20) != 0:
+
+        if (offset := height % 80) != 0:
             min_y = offset
-        
+
         possible_insets = []
-        for x in range(10+min_x, width, 20):
-            for y in range(10+min_y, height, 20):
+        for x in range(40+min_x, width, 80):
+            for y in range(40+min_y, height, 80):
                 possible_insets.append([x, y])
         for point in possible_insets:
             minimum = (point[0]-3, point[1]+3)
@@ -135,14 +134,24 @@ def depth_map_bottom(file_num: int, generate_images=False):
                 inside_points.append((point[0], point[1], 0))
                 if generate_images:
                     cv2.circle(output_image, tuple(point), 3, (0, 0, 255), -1)
+            elif generate_images:
+                cv2.circle(output_image, tuple(point), 3, (0, 255, 255), -1)
         if generate_images:
-            cv2.drawContours(output_image, [largest_contour], -1, (0, 255, 255), thickness=2)
+            cv2.drawContours(output_image, [largest_contour], -1, (0, 255, 0), thickness=2)
     elif np.min(depth_map) == 1:
-        for x in range(10, width, 20):
-            for y in range(10, height, 20):
+        for x in range(40, width, 80):
+            for y in range(40, height, 80):
                 inside_points.append([x, y, 0])
                 if generate_images:
                     cv2.circle(output_image, (x, y), 3, (0, 0, 255), -1)
+
+    # rysowanie siatki
+    if generate_images:
+        for x in range(80, width+1, 80):
+            cv2.line(output_image, (x, 0), (x, height), (255, 0, 0), 1)
+
+        for y in range(80, height+1, 80):
+            cv2.line(output_image, (0, y), (width, y), (255, 0, 0), 1)
 
     if generate_images:    
         cv2.imwrite(f'depth_map/faces/bot_{file_num}.png', output_image)
@@ -198,10 +207,7 @@ def depth_map_top(file_num: int, generate_images=False):
 
     depth_map_normalized = depth_map_normalized.astype(np.uint8)
 
-    # jednak nie potrzebne
-    # equalized_image = cv2.equalizeHist(depth_map_normalized)
-
-    # # zwiększenie kontrastu
+    # znajdowanie krawędzi
     sobelx = cv2.Sobel(depth_map_normalized, cv2.CV_64F, 1, 0, ksize=5)
     sobely = cv2.Sobel(depth_map_normalized, cv2.CV_64F, 0, 1, ksize=5)
 
@@ -215,7 +221,7 @@ def depth_map_top(file_num: int, generate_images=False):
 
     insets = set()
 
-    # wyznaczanie krawędzi
+    # zapisanie krawędzi
     contours, _ = cv2.findContours(gradient_magnitude_normalized,
                                    cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
     for contour in contours:
@@ -236,7 +242,10 @@ def depth_map_top(file_num: int, generate_images=False):
     return sorted(insets)
 
 
-def generate(n=1543, done=804): # part 41855
+def generate(n=1543, done=100): # part 41855
+    """
+    Generate top and bottom depth maps for every file in new_parts.csv file.
+    """
     with open('./api/database/new_parts.csv', mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for index, row in track(enumerate(reader), total=n):
@@ -249,6 +258,9 @@ def generate(n=1543, done=804): # part 41855
 
 
 def generate_top_bottom_insets(file_num: str):
+    """
+    Save insets coordinates in csv files.
+    """
     bottom = depth_map_bottom(file_num)
     top = depth_map_top(file_num)
 
@@ -259,7 +271,7 @@ def generate_top_bottom_insets(file_num: str):
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
         writer.writerows(bottom)
-    
+
     file_name = f"{folder_path}/{file_num}_top.csv"
     with open(file_name, mode='w', newline='') as file:
         writer = csv.writer(file)
@@ -267,3 +279,7 @@ def generate_top_bottom_insets(file_num: str):
 
 
 # generate()
+
+
+# depth_map_top(2577, True)
+# depth_map_bottom(2577, True)

@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from pprint import pprint
 import numpy as np
 from collections import defaultdict
 
@@ -110,6 +109,9 @@ class Model:
 
     @staticmethod
     def from_json(scene: list[dict]) -> list['Model']:
+        """
+        Loads scene in json format into list of Model class.
+        """
         models = []
         for model in scene:
             model_name = model['gltfPath']
@@ -148,6 +150,7 @@ def get_models_connection(scene: dict[str, list]):
     # słownik model_name -> jego połączenia
     models = check_connection(scene)
 
+    # słownik współrzędna jego modele
     coordinate_map = defaultdict(list)
 
     for model_name, coordinates in models.items():
@@ -161,9 +164,7 @@ def get_models_connection(scene: dict[str, list]):
             key = tuple(coord_set)
             coordinate_map[key].append(model_name)
 
-    # pprint(coordinate_map)
-
-    # model_name -> połączone do niego modele
+    # słownik model_name -> połączone do niego modele
     graph = defaultdict(set)
 
     for models_with_same_coords in coordinate_map.values():
@@ -177,24 +178,22 @@ def get_models_connection(scene: dict[str, list]):
 
 
 def separate_group(group_to_split, graph, seperated_by: str):
-    lower_group = set()
+    """
+    Separates group by given model name.
+    """
     upper_group = set()
 
-    def split_group(node, is_upper):
-        if node in lower_group or node in upper_group:
+    def get_upper_group(node):
+        if node in upper_group:
             return
-        if is_upper:
-            upper_group.add(node)
-        else:
-            lower_group.add(node)
-        pprint(graph[node])
+        upper_group.add(node)
         for neighbor in graph[node]:
-            split_group(neighbor, is_upper or node == seperated_by)
+            get_upper_group(neighbor)
 
-    split_group(seperated_by, True)
+    get_upper_group(seperated_by)
     down_result = list(set(group_to_split) - upper_group)
 
-    # ustawienie wybranego na pierwszą pozycję bo set jest szybszy w operacji ale nie zachowuje kolejności
+    # ustawienie wybranego na pierwszą pozycję, aby we frontendzie głównym obiektem był ten dolny
     up_result = list(upper_group)
     temp = up_result[0]
     index_seperator = up_result.index(seperated_by)
@@ -205,6 +204,9 @@ def separate_group(group_to_split, graph, seperated_by: str):
 
 
 def find_connected_groups(scene, separated_by=None) -> list[tuple[str, int]]:
+    """
+    Returns list of groups of connected models.
+    """
     models, graph = get_models_connection(scene)
 
     # Depth first-search
@@ -252,6 +254,7 @@ def find_connected_groups(scene, separated_by=None) -> list[tuple[str, int]]:
 
 
 def connection_points(scene) -> dict:
+    # Wykorzystywane tylko do pokazania, w których miejscach znajdowały punkty łączeń w frontendzie
     points = check_connection(scene.models)
 
     result = []

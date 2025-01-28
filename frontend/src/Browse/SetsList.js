@@ -86,8 +86,8 @@ export default function SetsDisplay() {
     }, [pageIndex]);
 
     return (
-        <div className='flex flex-col justify-center px-[200px] gap-10 text-white text-[24px]'>
-            <div className='grid grid-cols-4 gap-10'>
+        <div className='flex flex-col justify-between px-[200px] gap-10 text-white text-[24px] h-[800px]'>
+            <div className='grid grid-cols-4 gap-10 h-full'>
                 {sets && sets.map((set) => (
                     <div key={set._id}>
                         <h3>{set.name}</h3>

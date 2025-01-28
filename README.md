@@ -8,92 +8,62 @@ pracy nad wybranym modelem.
 Wyświetlanie powinno być zrealizowane z wykorzystaniem OpenGL.
 
 Wykorzystywane techonlogie:
-    - React.js
-    - wykorzystanie biblioteki fiber/three.js
-    - FAST API w pythonie do komunikacji z bazami danych
-    - Python + Blender do wstępnego przetworzenia plików graficznych
-    - Baza danych MongoDB
-    - auth0 do autoryzacji użytkowników
+- React.js
+- Wykorzystanie biblioteki fiber/three.js
+- FAST API w pythonie do komunikacji z bazą danych
+- Python + Blender do wstępnego przetworzenia plików graficznych
+- Baza danych MongoDB
+- auth0 do autoryzacji użytkowników
 
 Wymagania:
-Funkcjonalne:
-    - rejestracja/logowania do aplikacji
-    - zapis postępu w modelowaniu
-    - możliwość posiadania kilku(?) zaczętych modeli
-    - udostępnianie swoich modeli wraz z instrukcją (?)
-    - wyświetlanie instrukcji na stronie
-    - system posiada 2 tryby:
-        - odtwarzanie modeli: w eksploratorze znajdują się tylko elementy niezbędne
-        - tworzenie własnych: w eksploratorze znajdują się wszystkie elementy z możliwością filtrowania
-    - możliwość nakładania materiału (koloru) na elementy
-    - możliwość budowania w formie edytora:
-        - przez przeciąganie elementów z eksploratora do edytora
-        - udostępnienie w edytorze translacji w odpowiednich interwałach oraz rotacji o 90 stopni w każdym kierunku
-        - udostępnienie skrótów klawiszowych do transalcji, rotacji, czy usuwanie elementów
-    - dostęp do elementów z ogólnodostępnej bazy klocków
-    - możliwość oceniania modeli innych użytkowników
-
-Niefunkcjonalne:
-    - nie musi być przystosowana do urządzeń mobilnych
-    - umożliwienie edycji dużych modeli do x elementów
+- rejestracja/logowania do aplikacji
+- zapis postępu w modelowaniu
+- udostępnianie swoich modeli wraz z instrukcją
+- wyświetlanie instrukcji na stronie
+- system posiada 2 tryby:
+    - odtwarzanie modeli: w eksploratorze znajdują się tylko elementy niezbędne
+    - tworzenie własnych: w eksploratorze znajdują się wszystkie elementy z możliwością filtrowania
+- możliwość nakładania materiału (koloru) na elementy
+- możliwość budowania w formie edytora:
+    - przez przeciąganie elementów z eksploratora do edytora
+    - udostępnienie w edytorze translacji w odpowiednich interwałach oraz rotacji o 90 stopni w płaszczyźnie
+- dostęp do elementów z ogólnodostępnej bazy klocków
+- możliwość komentowania modeli innych użytkowników
 
 
+Dostępne strony:
+- Builder - główna część aplikacji, budowanie
+- Browse - przeglądanie zestawów użytkowników z możliwością wybrania ich do zbudowania
+- Your sets - strona z zapisanymi postępami, [dostępne po zalogowaniu]
+- Account - własne informacje + komentarze do swoich zestawów, [dostępne po zalogowaniu]
+- strona logowania - zewnętrzna przez 0Auth
 
-Baza danych mysql:
-- parts (zawiera nazwy elementów do filtrowania)
-- colors (oficjalne kolory)
-
-----------------------------------------------
-JEZELI BEDE KORZYSTAL Z OFICJALNYCH INSTRUKCJI
-- inventory_parts
-- sets
-- thumbnails
-----------------------------------------------
 
 Baza danych mongo:
 
-Użytkownik:
-- id
-- mail
-- login
-- password
+## Instalacja
+### Frontend
+Zainstalować node.js: https://nodejs.org/en/download
 
-Model:
-- nazwa
-- plik gltf
+cd frontend/
 
-Postęp:
-- id
-- user_id
-- thumbnail
-- postęp w postaci pliku json:
-- ewentualne podpięcie do modelu który się odtwarza
+npm install
 
-każdy wiersz jego posiada: id, model, pozycję, rotację, kolor
+### API + Baza danych
 
-Dodatkowo potrzebuję jakoś tabelę do odtwarzania modeli zawierająca:
-- id
-- nazwa
-- user_id = None
-- lista postępów czyli tabela pośrednia
+cd api/
 
+SETUP MONGO
 
-i jakaś tabela Review zawierająca:
-- model_id
-- user_id
-- rating
-- comment
+## Uruchomienie
 
-W odtwarzaniu modelu:
-porównywanie postępu w plikach json i sprawdzanie różnic pomiędzy
-względnym położeniem (relative location) obiektów w scenie oraz ich rotacji.
+### Frontend
+cd fronted/
 
-
-Jak uruchomić:
-
-frontend:
 npm start
 
-api:
+### API + Baza danych
+
 ./database/start.sh
+
 uvicorn api:app --reload

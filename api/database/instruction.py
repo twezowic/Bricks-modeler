@@ -6,6 +6,9 @@ from database.models import ConnectionDB, ModelDB
 
 
 def get_masks(coords1, coords2):
+    """
+    Creates masks from 2 lists containing models connection points.
+    """
     coords1 = np.array(coords1)
     coords2 = np.array(coords2)
 
@@ -15,7 +18,7 @@ def get_masks(coords1, coords2):
     mask1 = np.zeros((len(unique_y1), len(unique_x1)), dtype=int)
     mask2 = np.zeros((len(unique_y2), len(unique_x2)), dtype=int)
 
-    # wartość: pozycja w tabeli
+    # wartość: pozycja w tabeli do łatwiejszego indeksowania
     index_map1_x = {val: idx for idx, val in enumerate(unique_x1)}
     index_map1_y = {val: idx for idx, val in enumerate(unique_y1)}
     index_map2_x = {val: idx for idx, val in enumerate(unique_x2)}
@@ -37,6 +40,9 @@ def get_masks(coords1, coords2):
 
 
 def prepare_step(scene):
+    """
+    Creates lists of models and theirs connection from scene in json format.
+    """
     models, graph = get_models_connection(scene)
     instruction_connections = []
     for key, values in graph.items():

@@ -3,7 +3,6 @@ import csv
 from dataclasses import asdict
 import json
 from math import ceil, floor
-from pprint import pprint
 from pymongo import MongoClient
 from bson import ObjectId
 import os
@@ -13,23 +12,6 @@ from database.models import StepDB
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['LEGO']
-
-models = db['Models']
-tracks = db['Tracks']
-sets = db['Sets']
-reviews = db['Reviews']
-
-instruction_steps = db['Instruction_steps']
-instruction_models = db['Instruction_models']
-
-
-models2 = db['Models_v2']
-tracks2 = db['Tracks_v2']
-sets2 = db['Sets_v2']
-reviews2 = db['Reviews_v2']
-instruction_steps2 = db['Instruction_steps_v2']
-instruction_models2 = db['Instruction_models_v2']
-
 
 models3 = db['Models_v3']
 tracks3 = db['Tracks_v3']
@@ -80,7 +62,7 @@ def _load_depth_maps(part_num: str):
 
 # Models
 def add_models_v3():
-    descriptions = pd.read_csv('./new_parts_without_wheels.csv')
+    descriptions = pd.read_csv('./new_parts.csv')
 
     for i, row in descriptions.iterrows():
         part_num = row['part_num']

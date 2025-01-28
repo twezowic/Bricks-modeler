@@ -17,7 +17,7 @@ export default function Explorer({ setColorModel, selectedStep }) {
 
   const [parts, setParts] = useState([]);
 
-  const [filterValue, setFilterValue] = useState('brick 2 x 4');
+  const [filterValue, setFilterValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [size, setSize] = useState([0, 0, 0]);
 
@@ -120,8 +120,8 @@ export default function Explorer({ setColorModel, selectedStep }) {
   };
 
   return (
-    <div className='w-full h-[13vh] overflow-x-auto bg-white flex flex-col'>
-      <ul className='flex p-0 list-none'>
+    <div className='w-full h-[13vh] bg-white flex flex-col'>
+      <ul className='flex p-0 list-none overflow-x-auto w-full'>
         {partElements}
       </ul>
       {!set_id &&
