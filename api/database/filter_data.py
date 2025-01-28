@@ -10,7 +10,7 @@ def filter_parts(output_path):
     # Filtrowanie kategorii
     used_categories = [
         "1", "3", "5", "9", "11", "14", "15", "16",
-        "19", "20", "21", "23", "29", "32", "37", "49", "67"
+        "19", "20", "21", "23", "32", "37", "49", "67"
     ]
 
     categories_df = pd.read_csv(categories_csv_path)
