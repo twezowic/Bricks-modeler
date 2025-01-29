@@ -114,3 +114,9 @@ source pyvenv/bin/activate
 
 uvicorn api:app --reload
 ```
+
+### Dane do przykładowego konta użytkownika:
+
+mail: jokixo9944@rowplant.com
+
+hasło: bp+w5$88qX4$xgh
