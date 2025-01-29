@@ -2,7 +2,7 @@ import numpy as np
 from database.mongodb import get_step
 import networkx as nx
 from database.connection import get_models_connection
-from database.models import ConnectionDB, ModelDB
+from database.models import InstructionConnectionDB, InstructionModelDB
 
 
 def get_masks(coords1, coords2):
@@ -48,18 +48,18 @@ def prepare_step(scene):
     for key, values in graph.items():
         for model_name in values:
             mask1, mask2 = get_masks(models[key][0], models[model_name][1])
-            instruction_connections.append(ConnectionDB(mask1.tolist(), key, mask2.tolist(), model_name))
-    return ModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_connections
+            instruction_connections.append(InstructionConnectionDB(mask1.tolist(), key, mask2.tolist(), model_name))
+    return InstructionModelDB.from_scene(scene.models if not isinstance(scene, list) else scene), instruction_connections
 
 
-def _prepare_edges(steps: list[ConnectionDB]):
+def _prepare_edges(steps: list[InstructionConnectionDB]):
     edges = []
     for step in steps:
         edges.append((step.up_id, step.down_id))
     return edges
 
 
-def _replace_id(steps: list[ConnectionDB], old: str, new: str):
+def _replace_id(steps: list[InstructionConnectionDB], old: str, new: str):
     for step in steps:
         if step.down_id == old:
             step.down_id = new
@@ -78,9 +78,9 @@ def is_symmetry(mask1, mask2):
     return is_equal_any_rotation
 
 
-def compare_masks(instruction_db_steps: list[ConnectionDB],
-                  current_connections: list[ConnectionDB]) -> bool:
-    def matches(con1: ConnectionDB, con2: ConnectionDB):
+def compare_masks(instruction_db_steps: list[InstructionConnectionDB],
+                  current_connections: list[InstructionConnectionDB]) -> bool:
+    def matches(con1: InstructionConnectionDB, con2: InstructionConnectionDB):
         return (
             (con1.up_mask == con2.up_mask or is_symmetry(con1.up_mask, con2.up_mask)) and
             (con1.down_mask == con2.down_mask or is_symmetry(con1.down_mask, con2.down_mask)) and
@@ -110,11 +110,11 @@ def compare_instruction_step(scene, set_id: str, step: int):
        len(current_models) != len(instruction_models):
         return False
 
-    instruction_models = [ModelDB(model['model_id'],
+    instruction_models = [InstructionModelDB(model['model_id'],
                                   model['color'],
                                   model['name'])
                           for model in instruction_models]
-    instruction_connections = [ConnectionDB(connection['up_mask'],
+    instruction_connections = [InstructionConnectionDB(connection['up_mask'],
                                             connection['up_id'],
                                             connection['down_mask'],
                                             connection['down_id'])

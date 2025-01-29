@@ -1,9 +1,9 @@
 from typing import List
-from database.models import ConnectionDB, StepDB, ModelDB
+from database.models import InstructionConnectionDB, StepDB, InstructionModelDB
 import networkx as nx
 
 
-def generate_stepdb(models: List[ModelDB], connections: List[ConnectionDB],
+def generate_stepdb(models: List[InstructionModelDB], connections: List[InstructionConnectionDB],
                     max_models_in_step: int = 3,) -> List[StepDB]:
     # Tworzenie grafu skierowanego z modeli i połączeń
     graph = nx.DiGraph()

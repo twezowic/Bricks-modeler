@@ -1,14 +1,10 @@
-import base64
-import csv
 from dataclasses import asdict
-import json
-from math import ceil, floor
+from typing import Optional
 from pymongo import MongoClient
 from bson import ObjectId
-import os
 import pandas as pd
 from collections import Counter
-from database.models import StepDB
+from database.models import ModelDB, TrackDB, CommentDB, SetDB, StepDB
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['LEGO']
@@ -22,13 +18,6 @@ comments3 = db['Comments_v3']
 
 # ------------------------------------------------------------------------------------
 # Utils
-def _get_size(minimum, maximum):
-    LENGTH = 20
-    HEIGHT = 8          # +4 inset
-    return [floor(abs(maximum[1] - minimum[1]) / LENGTH),
-            floor(abs(maximum[0] - minimum[0]) / LENGTH),
-            ceil((abs(maximum[2] - minimum[2]) - 4) / HEIGHT)
-            ]
 
 
 def _max_values():       # [48, 56, 39], dane z 12.24.24
@@ -43,64 +32,13 @@ def _max_values():       # [48, 56, 39], dane z 12.24.24
     return max_res
 
 
-def _load_depth_maps(part_num: str):
-    base_path = "/home/tomek/Documents/lego_pd/depth_map/csv"
-
-    bot_file = os.path.join(base_path, f"{part_num}/{part_num}_bot.csv")
-    top_file = os.path.join(base_path, f"{part_num}/{part_num}_top.csv")
-
-    with open(bot_file, mode='r') as bot_csv:
-        reader = csv.reader(bot_csv)
-        insets_bot = [list(map(int, row)) for row in reader]
-
-    with open(top_file, mode='r') as top_csv:
-        reader = csv.reader(top_csv)
-        insets_top = [list(map(int, row)) for row in reader]
-
-    return insets_top, insets_bot
-
-
 # Models
 def add_models_v3():
     descriptions = pd.read_csv('./new_parts.csv')
 
     for i, row in descriptions.iterrows():
-        part_num = row['part_num']
-        category = row['part_cat_id']
-        description = row['name']
-        print(f"{i}/{len(descriptions)}")
-
-        gltf_file_path = os.path.join("./gltf", f"{part_num}.gltf")
-
-        with open(gltf_file_path, 'r') as file:
-            content = file.read()
-
-        thumbnail_path = os.path.join("./thumbnails", f"{part_num}.png")
-
-        with open(thumbnail_path, 'rb') as img_file:
-            thumbnail = img_file.read()
-        thumbnail_base64 = base64.b64encode(thumbnail).decode('utf-8')
-
-        metadata = json.loads(content)
-        minimum = metadata['accessors'][0]['min']
-        maximum = metadata['accessors'][0]['max']
-
-        top, bot = _load_depth_maps(part_num)
-
-        document = {
-            'model': part_num,
-            'file': content,
-            'description': description,
-            'category': category,
-            'thumbnail': thumbnail_base64,
-            'size': _get_size(minimum, maximum),
-            'min': minimum,
-            'max': maximum,
-            'insets_top': top,
-            'insets_bot': bot,
-        }
-
-        models3.insert_one(document)
+        model = ModelDB.create(row)
+        models3.insert_one(asdict(model))
 
 
 def get_model_v3(name: str):
@@ -137,23 +75,17 @@ def get_thumbnails_v3(name: str = "", category: str = "",
         r['_id'] = str(r['_id'])
         result.append(r)
     return result
+# ------------------------------------------------------------------------------------
 
 
 # Tracks
 def add_track_v3(name: str, track, thumbnail,
-                 user_id: str, set_id: str = None, step: int = None):
-    model_document = {
-        'name': name,
-        'track': track,
-        'thumbnail': thumbnail,
-        'user_id': user_id,
-    }
+                 user_id: str,
+                 set_id: Optional[str] = None,
+                 step: Optional[int] = None):
+    model = TrackDB(name, track, thumbnail, user_id, set_id, step)
 
-    if set_id is not None:
-        model_document['set_id'] = set_id
-        model_document['step'] = step
-
-    tracks3.insert_one(model_document)
+    tracks3.insert_one(asdict(model))
 
 
 def get_all_tracks_v3(user_id):
@@ -179,31 +111,28 @@ def update_track(id: str, track, thumbnail, step):
         {'_id': ObjectId(id)},
         {'$set': updated_fields}
     )
+# ------------------------------------------------------------------------------------
 
 
+# Comments
 def add_comment(set_id: str, comment: str, user_id):
-    model_document = {
-        'set_id': set_id,
-        'comment': comment,
-        'user_id': user_id,
-    }
+    model = CommentDB(set_id, comment, user_id)
 
-    comments3.insert_one(model_document)
+    comments3.insert_one(asdict(model))
 
 
 def get_comments_for_set(set_id: str):
     result = comments3.find({'set_id': set_id}, {'comment': 1, 'rating': 1, 'user_id': 1, '_id': 0})
     return list(result)
+# ------------------------------------------------------------------------------------
 
 
+# Sets
 def add_instruction(name: str, user_id: str,
                     steps: list[StepDB]):
-    model_document = {
-        'name': name,
-        'user_id': user_id,
-    }
+    model = SetDB(name, user_id)
 
-    set_inserted = sets3.insert_one(model_document)
+    set_inserted = sets3.insert_one(asdict(model))
 
     connection_documents = []
 
@@ -310,6 +239,7 @@ def get_sets_from_user(user_id: str):
         result.append(set_thumbnails)
 
     return result
+# ------------------------------------------------------------------------------------
 
 
 if __name__ == "__main__":
