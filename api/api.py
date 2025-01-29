@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import database.mongodb as mongodb
-from database.connection import find_connected_groups, connection_points
+from database.connection import find_connected_groups
 import json
 from database.instruction import prepare_step, compare_instruction_step
 from database.generate_instruction import generate_stepdb

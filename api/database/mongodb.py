@@ -4,7 +4,10 @@ from pymongo import MongoClient
 from bson import ObjectId
 import pandas as pd
 from collections import Counter
-from database.models import ModelDB, TrackDB, CommentDB, SetDB, StepDB
+if __name__ != "__main__":
+    from database.models import ModelDB, TrackDB, CommentDB, SetDB, StepDB
+else:
+    from models import ModelDB, TrackDB, CommentDB, SetDB, StepDB
 
 client = MongoClient('mongodb://localhost:27017/')
 db = client['LEGO']
@@ -243,5 +246,5 @@ def get_sets_from_user(user_id: str):
 
 
 if __name__ == "__main__":
-    print(_max_values())
-    # add_models_v3()
+    # print(_max_values())
+    add_models_v3()

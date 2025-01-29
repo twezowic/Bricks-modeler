@@ -57,6 +57,7 @@ def is_circle(contour):
         20 <= radius <= 30
     )
 
+
 def get_size(file_name: str):
     with open(file_name) as fh:
         model = json.loads(fh.read())
@@ -70,7 +71,7 @@ def get_size(file_name: str):
 
 
 def depth_map_bottom(file_num: int, generate_images=False):
-    file_name = f'./api/database/gltf/{file_num}.gltf'
+    file_name = f'./gltf/{file_num}.gltf'
 
     size = get_size(file_name)
 
@@ -160,7 +161,7 @@ def depth_map_bottom(file_num: int, generate_images=False):
 
 
 def depth_map_top(file_num: int, generate_images=False):
-    file_name = f'./api/database/gltf/{file_num}.gltf'
+    file_name = f'./gltf/{file_num}.gltf'
 
     size = get_size(file_name)
 
@@ -246,7 +247,7 @@ def generate(n=1543, done=100): # part 41855
     """
     Generate top and bottom depth maps for every file in new_parts.csv file.
     """
-    with open('./api/database/new_parts.csv', mode='r', encoding='utf-8') as file:
+    with open('./new_parts.csv', mode='r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         for index, row in track(enumerate(reader), total=n):
             if index < done:
@@ -264,7 +265,7 @@ def generate_top_bottom_insets(file_num: str):
     bottom = depth_map_bottom(file_num)
     top = depth_map_top(file_num)
 
-    folder_path = f"depth_map/csv/{file_num}"
+    folder_path = f"./depth_map/csv/{file_num}"
     os.makedirs(folder_path, exist_ok=True)
 
     file_name = f"{folder_path}/{file_num}_bot.csv"
@@ -279,7 +280,6 @@ def generate_top_bottom_insets(file_num: str):
 
 
 # generate()
-
 
 # depth_map_top(2577, True)
 # depth_map_bottom(2577, True)
