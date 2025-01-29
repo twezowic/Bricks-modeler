@@ -63,7 +63,7 @@ def get_thumbnails_v3(name: str = "", category: str = "",
     if name:
         filters['description'] = {'$regex': name, '$options': 'i'}
     if category:
-        filters['category'] = {'$regex': category}
+        filters['category'] = {'$eq': category}
     if size:
         for i in range(3):
             if size[i] != 0:
