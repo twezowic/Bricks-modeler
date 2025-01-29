@@ -1,0 +1,142 @@
+{
+  "accessors": [
+    {
+      "name": "15444-Mesh_0_positions",
+      "componentType": 5126,
+      "count": 43,
+      "min": [
+        -10,
+        -10,
+        -48
+      ],
+      "max": [
+        10,
+        10,
+        4
+      ],
+      "type": "VEC3",
+      "bufferView": 0,
+      "byteOffset": 0
+    },
+    {
+      "name": "15444-Mesh_0_normals",
+      "componentType": 5126,
+      "count": 43,
+      "min": [
+        -1,
+        -0.9238766431808472,
+        -0.9045340418815613
+      ],
+      "max": [
+        1,
+        1,
+        1
+      ],
+      "type": "VEC3",
+      "bufferView": 1,
+      "byteOffset": 0
+    },
+    {
+      "name": "15444-Mesh_0_indices",
+      "componentType": 5123,
+      "count": 216,
+      "min": [
+        0
+      ],
+      "max": [
+        42
+      ],
+      "type": "SCALAR",
+      "bufferView": 2,
+      "byteOffset": 0
+    }
+  ],
+  "asset": {
+    "generator": "obj2gltf",
+    "version": "2.0"
+  },
+  "buffers": [
+    {
+      "name": "15444",
+      "byteLength": 1464,
+      "uri": "data:application/octet-stream;base64,AADAwAAAwEAAAIDAAADAwAAAwMAAAEDBAADAwAAAwMAAAMDBAADAwAAAwMAAAIDAAADAQAAAwMAAAMDBAADAQAAAwMAAAEDBAADAQAAAwEAAAIDAAADAQAAAwMAAAIDAAADAwAAAwMAAAEDCAAAgwQAAIMEAAEDCAAAgwQAAIEEAAEDCAADAwAAAwEAAAEDCAAAgQQAAIEEAAEDCAADAQAAAwEAAAEDCAAAgQQAAIMEAAEDCAADAQAAAwMAAAEDCAADAwAAAIMEAAMDBAADAQAAAIMEAAMDBAADAwAAAIMEAAEDBAAAgwQAAIMEAAAAAAADAQAAAIMEAAEDBAAAgQQAAIMEAAAAAAAAgQQAAIEEAAAAAAAAgwQAAIEEAAAAAAAAAAAAAwMAAAIBAAAAAAAAAwMAAAAAAtcOHQLXDh8AAAAAAtcOHQLXDh8AAAIBAAADAQAAAAAAAAAAAAADAQAAAAAAAAIBAtcOHQLXDh0AAAAAAtcOHQLXDh0AAAIBAvTeGtQAAwEAAAAAAvTeGtQAAwEAAAIBAt8OHwLXDh0AAAAAAt8OHwLXDh0AAAIBAAADAwAAAAAAAAAAAAADAwAAAAAAAAIBAs8OHwLnDh8AAAAAAs8OHwLnDh8AAAIBAvTeGNQAAwMAAAAAAvTeGNQAAwMAAAIBAAAAAAAAAAAAAAIBAOs0TPzrNE786zRO/i49nP7Jfmj6yX5q+i49nP7Jfmj6yX5o+Os0TPzrNEz86zRO/i49nv7Jfmj6yX5o+i49nv7Jfmj6yX5q+Os0TvzrNE786zRO/Os0TvzrNEz86zRO/sl+aPrJfmj6Lj2e/Os0TvzrNE786zRO/Os0TvzrNEz86zRO/sl+aPrJfmr6Lj2e/Os0TPzrNEz86zRO/sl+avrJfmr6Lj2e/Os0TPzrNE786zRO/sl+avrJfmj6Lj2e/sl+aPouPZ7+yX5o+sl+avouPZ7+yX5o+sl+aPouPZ7+yX5q+Os0TvzrNE786zRM/sl+avouPZ7+yX5q+Os0TPzrNE786zRM/Os0TPzrNEz86zRM/Os0TvzrNEz86zRM/0rmcPns2Pb9Fmhk//e/DPi6DbL8AAACA8wQ1P/MENb8AAACA04kMP9OJDL+wWSE/AACAPwAAAIAAAACAPsBGPwAAAIDKWSE/8wQ1P/MENT8AAACA04kMP9OJDD+wWSE/AAAAgAAAgD8AAACAAAAAgD7ARj/KWSE/8wQ1v/MENT8AAACA04kMv9OJDD+wWSE/AACAvwAAAIAAAACAPsBGvwAAAIDKWSE/8wQ1v/MENb8AAACA04kMv9OJDL+wWSE//e/Dvi6DbL8AAACA0rmcvns2Pb9Fmhk/AAAAgAAAAIAAAIA/AAABAAIAAAADAAEABAAFAAYABQAHAAYACAAJAAoACAAKAAsACwAKAAwACwAMAA0ADQAMAA4ADQAOAA8ADwAOAAkADwAJAAgACwAAAAIACwACAAgADwAEAAYADwAGAA0AEAAJAA4AEAAOABEAEgATAAkAEgAJABAAFAAVABMAFAATABIAEQAOABUAEQAVABQABgAAAAsABgALAA0ABAAPAAgABAAIAAIABAARABQABAAUAAUAAgAQABEAAgARAAQAAQASABAAAQAQAAIABQAUABIABQASAAEAAwAAAAYAAwAGAAcAAwAHAAUAAwAFAAEAFgAMAAoAFgAKABcAFgAXABMAFgATABUAFwAKAAkAFwAJABMADAAWABUADAAVAA4AGAAZABoAGAAaABsAGwAaABwAGwAcAB0AHQAcAB4AHQAeAB8AHwAeACAAHwAgACEAIQAgACIAIQAiACMAIwAiACQAIwAkACUAJQAkACYAJQAmACcAJwAmACgAJwAoACkAKgAYABsAKgAbAB0AKgAdAB8AKgAfACEAKgAhACMAKgAjACUAKgAlACcAKgAnACkA"
+    }
+  ],
+  "bufferViews": [
+    {
+      "name": "bufferView_0",
+      "buffer": 0,
+      "byteLength": 516,
+      "byteOffset": 0,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "name": "bufferView_1",
+      "buffer": 0,
+      "byteLength": 516,
+      "byteOffset": 516,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "name": "bufferView_2",
+      "buffer": 0,
+      "byteLength": 432,
+      "byteOffset": 1032,
+      "target": 34963
+    }
+  ],
+  "materials": [
+    {
+      "name": "default",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5,
+          0.5,
+          0.5,
+          1
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 1
+      },
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "alphaMode": "OPAQUE",
+      "doubleSided": false
+    }
+  ],
+  "meshes": [
+    {
+      "name": "15444-Mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "indices": 2,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "15444",
+      "mesh": 0
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
