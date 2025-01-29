@@ -133,13 +133,6 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
         setModels(newModels);
         state.selected = [];
       } 
-      else if (event.key === 'Shift') {
-        setTooglePoints(!tooglePoints);
-        if (!tooglePoints){
-          getConnection123();
-        }
-      }
-
     };
 
     window.addEventListener('keydown', handleKeyDown);
@@ -386,55 +379,6 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
     });
   };
 
-  const getConnection123 = async () => {
-    try {
-        const response = await fetch(`${ip}/connection123`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ 'models': models })
-        });
-
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-
-        console.log(data);
-
-        const newPoints = data.map(item => ({
-            point: item.point,
-            color: item.color
-        }));
-        setPoints(newPoints);
-
-    } catch (error) {
-        console.error('Error fetching data:', error);
-    }
-};
-
-
-  const Points = ({ data }) => {
-    return (
-      <>
-        {data.map((point, index) => (
-          <Point key={index} position={point.point} color={point.color}/>
-        ))}
-      </>
-    );
-  };
-
-  const Point = ({ position, color }) => {
-    return (
-      <mesh position={position}>
-        <sphereGeometry args={[5, 10, 10]} />
-        <meshStandardMaterial color={color} />
-      </mesh>
-    );
-  };
-
   return (
     <div
     className="float-right w-full h-[80vh] gap-10 relative"
@@ -473,9 +417,6 @@ export default function Modeler({ color, selectedStep, setSelectedStep }) {
                 getConnection={getConnection}
               />
             ))}
-            {tooglePoints &&
-              <Points data={points} />
-            }
           </group>
           <Ground />
         </Suspense>

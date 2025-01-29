@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ip } from '../utils';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Input } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
-import { useAuth0 } from '@auth0/auth0-react';
 import Comments from './Comments';
 
 export default function SetsDisplay() {

@@ -107,14 +107,6 @@ export default function Renderer({ glRef, sceneRef, cameraRef, getSteps }) {
 
     const sceneCopy = sceneRef.current.clone(true);
 
-
-    // TODO do zastanowienia się
-    // const ground = sceneCopy.children.find(
-    //   (child) => child.type === "Mesh"
-    // )
-
-    // sceneCopy.remove(ground)
-
     const groupElement = sceneCopy.children.find(
       (child) => child.type === "Group"
     );

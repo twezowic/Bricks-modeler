@@ -147,15 +147,6 @@ async def get_instruction(set_id: str):
     return mongodb.get_instruction(set_id)
 
 
-class Scene(BaseModel):
-    models: list
-
-
-@app.post('/connection123', summary="Get connection points coordinates")
-async def get_connections(models: Scene):
-    return connection_points(models)
-
-
 @app.get("/sets", summary="Get shared sets from user")
 async def get_sets_from_user(user_id: str):
     return mongodb.get_sets_from_user(user_id)

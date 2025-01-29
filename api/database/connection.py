@@ -251,17 +251,3 @@ def find_connected_groups(scene, separated_by=None) -> list[tuple[str, int]]:
         groups.append(group_to_split)
 
     return groups
-
-
-def connection_points(scene) -> dict:
-    # Wykorzystywane tylko do pokazania, w których miejscach znajdowały punkty łączeń w frontendzie
-    points = check_connection(scene.models)
-
-    result = []
-    for _, point in points.items():
-        for x in point[0].reshape(-1, 3).tolist():
-            result.append({'point': x, 'color': 'blue'})
-        for x in point[1].reshape(-1, 3).tolist():
-            result.append({'point': x, 'color': 'blue'})
-
-    return result

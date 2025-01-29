@@ -22,8 +22,6 @@ export default function Model({ name, gltfPath, state, color = 'white', groups, 
         if (group.includes(name)){
           if (snap.selected.length !== 1 && snap.selected.includes(name) && !seperateBy) { 
             setSeperateBy(name);
-          //   const selectedHeight = findHeight(name);
-          //   state.selected = [name].concat(getModelsHigherThan(group, selectedHeight));
           }
           else {
             state.selected = group;
