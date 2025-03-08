@@ -35,6 +35,10 @@ W ramach tematu została stworzona aplikacja webowa, która umożliwia budowanie
 - Strona logowania - zewnętrzna strona od 0Auth
 
 
+
+https://github.com/user-attachments/assets/429fcc6e-3df5-4367-aee4-65b013d832b8
+
+
 # Instalacja
 ## Frontend
 Zainstalować node.js: https://nodejs.org/en/download
@@ -147,6 +151,8 @@ As part of the project, a web application was created that allows building with 
 - Your sets - page with saved progress of user, [available after login].
 - Account - user information + comments on users sets, [available after login].
 - Login page - external page from 0Auth
+
+https://github.com/user-attachments/assets/429fcc6e-3df5-4367-aee4-65b013d832b8
 
 # Instalation
 ## Frontend
